@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://rakhimakeovers.pages.dev/</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    
+    <!-- Bridal Lookbook & Portfolio Images for Google Image Search -->
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/hero_bridal.webp</image:loc>
+      <image:title>Luxury Indian Bride by Rakhi Makeovers</image:title>
+      <image:caption>Bespoke HD &amp; Airbrush bridal makeover by master artist Rakhi in Bhubaneswar.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/bridal_traditional.webp</image:loc>
+      <image:title>Royal Traditional HD Bridal Makeup</image:title>
+      <image:caption>Rich crimson velvet lehenga with royal kohl eyes, dewy champagne highlight, and ornate matha patti.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/bridal_pastel.webp</image:loc>
+      <image:title>Pastel &amp; Glass Skin Modern Bride</image:title>
+      <image:caption>Blush peach lehenga with fresh floral hair styling and ultra-dewy glass skin bridal prep.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/bridal_reception.webp</image:loc>
+      <image:title>Cocktail &amp; Reception Glam Makeover</image:title>
+      <image:caption>High-fashion evening reception glam with bronze smokey eyes and Hollywood glam waves.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/gallery_south_indian.webp</image:loc>
+      <image:title>South Indian Temple Gold Kanjeevaram Bride</image:title>
+      <image:caption>Pure Kanjeevaram silk saree with antique temple jewelry, braided jasmine mogra, and warm glowing base.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/gallery_nikah.webp</image:loc>
+      <image:title>Royal Nikah &amp; Heritage Bride</image:title>
+      <image:caption>Emerald and champagne zari ensemble with ornate pearl jhummar passa and soft-focus skin.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/gallery_sangeet.webp</image:loc>
+      <image:title>Sangeet &amp; Mehendi Party Glam Look</image:title>
+      <image:caption>Sweatproof dance-ready bridal glam with vibrant glitter lid foil and volumized blowout curls.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/about_artist.webp</image:loc>
+      <image:title>Master Artist Rakhi at Work</image:title>
+      <image:caption>12+ years of bridal artistry mastery, skin-first philosophy, and luxury international vanity.</image:caption>
+    </image:image>
+    
+    <image:image>
+      <image:loc>https://rakhimakeovers.pages.dev/assets/images/luxury_products.webp</image:loc>
+      <image:title>100% Luxury Vanity Kit</image:title>
+      <image:caption>Original international makeup vanity featuring Dior, Charlotte Tilbury, MAC, and Huda Beauty.</image:caption>
+    </image:image>
+  </url>
+</urlset>

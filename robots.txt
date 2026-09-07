@@ -1,0 +1,10 @@
+# Robots.txt for Rakhi Makeovers
+# Allow all search engine crawlers (Googlebot, Bingbot, Chrome etc.)
+
+User-agent: *
+Allow: /
+Disallow: /scripts/
+Disallow: /node_modules/
+
+# Sitemaps
+Sitemap: https://rakhimakeovers.pages.dev/sitemap.xml

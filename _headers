@@ -1,0 +1,46 @@
+# Cloudflare Pages Headers Configuration
+# Documentation: https://developers.cloudflare.com/pages/configuration/headers/
+
+# Global Security & Core Headers
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+
+# Static Assets (Images, WebP, PNG, SVG, Favicons, Fonts) - 1 Year Cache
+/assets/images/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/favicon.*
+  Cache-Control: public, max-age=31536000, immutable
+
+/apple-touch-icon.png
+  Cache-Control: public, max-age=31536000, immutable
+
+/site.webmanifest
+  Cache-Control: public, max-age=604800
+  Content-Type: application/manifest+json; charset=utf-8
+
+# CSS & JavaScript - 1 Week Cache with Stale While Revalidate
+/assets/css/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+/assets/js/*
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
+
+# SEO Crawling Directives & Feeds
+/sitemap.xml
+  Cache-Control: public, max-age=86400
+  Content-Type: application/xml; charset=utf-8
+
+/robots.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain; charset=utf-8
+
+# HTML Pages - Always Fresh / Fast Revalidation
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate

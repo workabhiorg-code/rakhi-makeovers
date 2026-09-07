@@ -1,0 +1,22 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#0B0B0E"/>
+          <stop offset="100%" stop-color="#1A1822"/>
+        </linearGradient>
+        <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#F5E6BE"/>
+          <stop offset="50%" stop-color="#D4AF37"/>
+          <stop offset="100%" stop-color="#AA7C11"/>
+        </linearGradient>
+      </defs>
+      <rect width="512" height="512" rx="128" fill="url(#bg)"/>
+      <circle cx="256" cy="256" r="220" fill="none" stroke="url(#gold)" stroke-width="8" stroke-opacity="0.6"/>
+      <circle cx="256" cy="256" r="200" fill="none" stroke="url(#gold)" stroke-width="2" stroke-dasharray="10,10" stroke-opacity="0.4"/>
+      
+      <!-- Crown / Sparkle Accent -->
+      <path d="M256 120 L268 155 L305 160 L275 185 L285 220 L256 195 L227 220 L237 185 L207 160 L244 155 Z" fill="url(#gold)"/>
+      
+      <!-- Monogram 'R' -->
+      <text x="256" y="375" font-family="'Cinzel', 'Playfair Display', Georgia, serif" font-size="240" font-weight="700" fill="url(#gold)" text-anchor="middle">R</text>
+    </svg>
