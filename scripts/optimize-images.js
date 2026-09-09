@@ -25,16 +25,26 @@ async function optimizeImages() {
 
     const webpPath = path.join(imagesDir, `${parsed.name}.webp`);
     
+    // Read original buffer
+    const inputBuffer = fs.readFileSync(filePath);
+
     // Convert to WebP with optimal settings (quality 82, near lossless color/sharpness, effort 6)
-    await sharp(filePath)
+    await sharp(inputBuffer)
       .webp({ quality: 82, effort: 6 })
       .toFile(webpPath);
 
+    // Optimize JPG fallback in-place with mozjpeg compression & progressive rendering
+    const optimizedJpgBuffer = await sharp(inputBuffer)
+      .jpeg({ quality: 84, mozjpeg: true, progressive: true })
+      .toBuffer();
+    fs.writeFileSync(filePath, optimizedJpgBuffer);
+
+    const updatedJpgStat = fs.statSync(filePath);
     const webpStat = fs.statSync(webpPath);
     totalWebpBytes += webpStat.size;
 
     const savedPercent = (((originalStat.size - webpStat.size) / originalStat.size) * 100).toFixed(1);
-    console.log(`✓ ${file} (${(originalStat.size / 1024).toFixed(0)} KB) -> ${parsed.name}.webp (${(webpStat.size / 1024).toFixed(0)} KB) [Saved ${savedPercent}%]`);
+    console.log(`✓ ${file} (${(originalStat.size / 1024).toFixed(0)} KB -> ${(updatedJpgStat.size / 1024).toFixed(0)} KB JPG) -> ${parsed.name}.webp (${(webpStat.size / 1024).toFixed(0)} KB) [Saved ${savedPercent}%]`);
   }
 
   console.log(`\n🎉 Total Original Size: ${(totalOriginalBytes / 1024 / 1024).toFixed(2)} MB`);

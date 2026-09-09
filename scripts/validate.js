@@ -54,8 +54,9 @@ if (missingImages === 0) {
   console.log(`✅ Image References: All ${totalImages} images in index.html exist and resolve.`);
 }
 
-// 2. Cloudflare Pages Media File Size Audit (< 25MB Single-File Limit)
-const MAX_ALLOWED_FILE_BYTES = 25 * 1024 * 1024; // 25 MB limit
+// 2. Media Compliance Audit (Strict < 20MB Thresholds for Cloudflare Pages & Web Vitals)
+const MAX_ALLOWED_FILE_BYTES = 20 * 1024 * 1024; // 20 MB single file limit
+const MAX_ALLOWED_TOTAL_MEDIA_BYTES = 20 * 1024 * 1024; // 20 MB total media budget
 let oversizedFiles = 0;
 let totalMediaBytes = 0;
 let largestFile = { name: '', size: 0 };
@@ -79,7 +80,7 @@ function checkDirFiles(dir) {
           largestFile = { name: path.relative(rootDir, full), size: stat.size };
         }
         if (stat.size > MAX_ALLOWED_FILE_BYTES) {
-          console.error(`❌ File exceeds 25 MB Cloudflare Pages limit: ${full} (${(stat.size / 1024 / 1024).toFixed(2)} MB)`);
+          console.error(`❌ File exceeds 20 MB limit: ${full} (${(stat.size / 1024 / 1024).toFixed(2)} MB)`);
           oversizedFiles++;
           hasErrors = true;
         }
@@ -91,9 +92,13 @@ function checkDirFiles(dir) {
 checkDirFiles(rootDir);
 
 if (oversizedFiles === 0) {
-  console.log(`✅ Media Size Compliance: All ${mediaCount} media files are under 25 MB.`);
+  console.log(`✅ Media Size Compliance: All ${mediaCount} media files are under 20 MB.`);
   console.log(`   - Largest single file: ${largestFile.name} (${(largestFile.size / 1024).toFixed(1)} KB / ${(largestFile.size / 1024 / 1024).toFixed(2)} MB)`);
-  console.log(`   - Total media weight: ${(totalMediaBytes / 1024 / 1024).toFixed(2)} MB`);
+  console.log(`   - Total media weight: ${(totalMediaBytes / 1024 / 1024).toFixed(2)} MB (${(totalMediaBytes / 1024).toFixed(1)} KB) - Well below the 20 MB total budget!`);
+}
+if (totalMediaBytes > MAX_ALLOWED_TOTAL_MEDIA_BYTES) {
+  console.error(`❌ Total media payload exceeds 20 MB limit: ${(totalMediaBytes / 1024 / 1024).toFixed(2)} MB`);
+  hasErrors = true;
 }
 
 // 3. Check site.webmanifest
