@@ -4,17 +4,20 @@ const path = require('path');
 const rootDir = path.join(__dirname, '..');
 let hasErrors = false;
 
-console.log('=== RUNNING RAKHI MAKEOVERS DEPLOYMENT & SEO AUDIT ===\n');
+console.log('======================================================');
+console.log('✨ RAKHI MAKEOVERS - SEO, DSA & CLOUDFLARE AUDIT SUITE');
+console.log('======================================================\n');
 
-// 1. Check index.html
+// 1. Check index.html & Structured Data (JSON-LD)
 const indexHtml = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
 
-// Check JSON-LD syntax
 const jsonLdMatch = indexHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
 if (jsonLdMatch) {
   try {
     const parsed = JSON.parse(jsonLdMatch[1]);
-    console.log('✅ JSON-LD Structured Data: Valid JSON with ' + (parsed['@graph'] ? parsed['@graph'].length : 1) + ' schema nodes.');
+    const graphNodes = parsed['@graph'] || [];
+    const types = graphNodes.map(n => Array.isArray(n['@type']) ? n['@type'].join('/') : n['@type']);
+    console.log(`✅ JSON-LD Structured Data: Valid JSON with ${graphNodes.length} rich schema nodes (${types.join(', ')}).`);
   } catch (e) {
     console.error('❌ JSON-LD Parse Error:', e.message);
     hasErrors = true;
@@ -24,7 +27,14 @@ if (jsonLdMatch) {
   hasErrors = true;
 }
 
-// Check all image src attributes
+// Check Search Console verification placeholders
+if (indexHtml.includes('google-site-verification')) {
+  console.log('✅ Google Search Console verification meta tag hook is present.');
+} else {
+  console.warn('⚠️ google-site-verification tag is missing in index.html.');
+}
+
+// Check all image src attributes in HTML
 const imgSrcRegex = /<img[^>]+src=["']([^"']+)["']/g;
 let match;
 let missingImages = 0;
@@ -35,60 +45,102 @@ while ((match = imgSrcRegex.exec(indexHtml)) !== null) {
   const src = match[1];
   const fullPath = path.join(rootDir, src);
   if (!fs.existsSync(fullPath)) {
-    console.error(`❌ Missing image file: ${src}`);
+    console.error(`❌ Missing image file referenced in HTML: ${src}`);
     missingImages++;
     hasErrors = true;
   }
 }
 if (missingImages === 0) {
-  console.log(`✅ All ${totalImages} images in index.html exist and are properly resolved.`);
+  console.log(`✅ Image References: All ${totalImages} images in index.html exist and resolve.`);
 }
 
-// 2. Check site.webmanifest
+// 2. Cloudflare Pages Media File Size Audit (< 25MB Single-File Limit)
+const MAX_ALLOWED_FILE_BYTES = 25 * 1024 * 1024; // 25 MB limit
+let oversizedFiles = 0;
+let totalMediaBytes = 0;
+let largestFile = { name: '', size: 0 };
+let mediaCount = 0;
+
+function checkDirFiles(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name !== 'node_modules' && entry.name !== '.git') {
+        checkDirFiles(full);
+      }
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (['.jpg', '.jpeg', '.png', '.webp', '.svg', '.ico', '.mp4', '.mov', '.pdf'].includes(ext)) {
+        mediaCount++;
+        const stat = fs.statSync(full);
+        totalMediaBytes += stat.size;
+        if (stat.size > largestFile.size) {
+          largestFile = { name: path.relative(rootDir, full), size: stat.size };
+        }
+        if (stat.size > MAX_ALLOWED_FILE_BYTES) {
+          console.error(`❌ File exceeds 25 MB Cloudflare Pages limit: ${full} (${(stat.size / 1024 / 1024).toFixed(2)} MB)`);
+          oversizedFiles++;
+          hasErrors = true;
+        }
+      }
+    }
+  }
+}
+
+checkDirFiles(rootDir);
+
+if (oversizedFiles === 0) {
+  console.log(`✅ Media Size Compliance: All ${mediaCount} media files are under 25 MB.`);
+  console.log(`   - Largest single file: ${largestFile.name} (${(largestFile.size / 1024).toFixed(1)} KB / ${(largestFile.size / 1024 / 1024).toFixed(2)} MB)`);
+  console.log(`   - Total media weight: ${(totalMediaBytes / 1024 / 1024).toFixed(2)} MB`);
+}
+
+// 3. Check site.webmanifest
 try {
   const manifest = JSON.parse(fs.readFileSync(path.join(rootDir, 'site.webmanifest'), 'utf8'));
-  console.log(`✅ site.webmanifest: Valid JSON for "${manifest.name}".`);
+  console.log(`✅ site.webmanifest: Valid JSON manifest for "${manifest.name}".`);
 } catch (e) {
   console.error('❌ site.webmanifest Parse Error:', e.message);
   hasErrors = true;
 }
 
-// 3. Check sitemap.xml
+// 4. Check sitemap.xml
 const sitemap = fs.readFileSync(path.join(rootDir, 'sitemap.xml'), 'utf8');
 if (sitemap.includes('<urlset') && sitemap.includes('xmlns:image') && sitemap.includes('</urlset>')) {
   const imageCount = (sitemap.match(/<image:image>/g) || []).length;
-  console.log(`✅ sitemap.xml: Valid XML structure with ${imageCount} indexed Google Image records.`);
+  console.log(`✅ sitemap.xml: Valid XML structure with ${imageCount} Google Image records.`);
 } else {
   console.error('❌ sitemap.xml structure invalid.');
   hasErrors = true;
 }
 
-// 4. Check robots.txt
+// 5. Check robots.txt
 const robots = fs.readFileSync(path.join(rootDir, 'robots.txt'), 'utf8');
-if (robots.includes('User-agent: *') && robots.includes('Sitemap:')) {
-  console.log('✅ robots.txt: Properly configured for Googlebot & Chrome indexers.');
+if (robots.includes('User-agent: Googlebot') && robots.includes('User-agent: Googlebot-Image') && robots.includes('Sitemap:')) {
+  console.log('✅ robots.txt: Configured with explicit Googlebot, Googlebot-Image & sitemap directives.');
 } else {
-  console.error('❌ robots.txt missing standard directives.');
+  console.error('❌ robots.txt missing standard Googlebot or Sitemap directives.');
   hasErrors = true;
 }
 
-// 5. Check Cloudflare _headers & _redirects
+// 6. Check Cloudflare _headers & _redirects
 if (fs.existsSync(path.join(rootDir, '_headers')) && fs.existsSync(path.join(rootDir, '_redirects'))) {
-  console.log('✅ Cloudflare Pages: _headers & _redirects ready.');
+  console.log('✅ Cloudflare Pages Config: _headers & _redirects ready.');
 } else {
   console.error('❌ Missing _headers or _redirects file.');
   hasErrors = true;
 }
 
-// 6. Check 404.html
+// 7. Check 404.html
 if (fs.existsSync(path.join(rootDir, '404.html'))) {
-  console.log('✅ 404.html: Custom branded 404 error page present.');
+  console.log('✅ 404.html: Custom luxury 404 error page present.');
 } else {
   console.error('❌ Missing 404.html.');
   hasErrors = true;
 }
 
-// 7. Check Favicons
+// 8. Check Favicons & Touch Icons
 const favicons = ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png'];
 let missingFavs = 0;
 for (const f of favicons) {
@@ -99,13 +151,14 @@ for (const f of favicons) {
   }
 }
 if (missingFavs === 0) {
-  console.log('✅ Favicons & App Icons: All root icons present for Chrome, Safari & Android.');
+  console.log('✅ Favicons & App Icons: All root icons present for Chrome, iOS & Android.');
 }
 
 console.log('\n======================================================');
 if (hasErrors) {
-  console.log('❌ Audit completed with issues.');
+  console.log('❌ AUDIT FAILED: Please fix the issues logged above.');
   process.exit(1);
 } else {
-  console.log('🎉 AUDIT PASSED: Project is 100% optimized for Cloudflare Pages & Google Search / Chrome indexing!');
+  console.log('🎉 AUDIT 100% PASSED: Ready for Google Search Console Indexing & Cloudflare Pages Hosting!');
+  console.log('======================================================\n');
 }

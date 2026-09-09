@@ -17,8 +17,13 @@ const newHead = `  <meta charset="UTF-8">
   <meta name="description" content="Rakhi Makeovers is a premier luxury bridal and wedding makeup studio in Bhubaneswar, specializing in bespoke HD &amp; Airbrush bridal artistry, destination weddings, and royal bridal couture.">
   <meta name="keywords" content="bridal makeup artist Bhubaneswar, wedding makeup studio, airbrush bridal makeup, luxury bridal makeup, HD makeup artist Odisha, destination wedding makeup, Odia bride makeup, Rakhi Makeovers">
   <meta name="author" content="Rakhi Makeovers">
+  <meta name="publisher" content="Rakhi Makeovers">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
   <link rel="canonical" href="https://rakhimakeovers.pages.dev/">
+
+  <!-- Search Engine Verification Tags (Replace placeholders with your tokens) -->
+  <meta name="google-site-verification" content="GSC_VERIFICATION_TOKEN_HERE">
+  <meta name="msvalidate.01" content="BING_VERIFICATION_TOKEN_HERE">
 
   <!-- Open Graph / Facebook / WhatsApp / LinkedIn -->
   <meta property="og:type" content="website">
@@ -67,11 +72,22 @@ const newHead = `  <meta charset="UTF-8">
   <!-- Main Luxury Stylesheet -->
   <link rel="stylesheet" href="assets/css/style.css">
 
-  <!-- Structured Data / JSON-LD for Google Chrome Rich Results -->
+  <!-- Structured Data / JSON-LD for Google Rich Results & SERP Enhancements -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://rakhimakeovers.pages.dev/#website",
+        "url": "https://rakhimakeovers.pages.dev/",
+        "name": "Rakhi Makeovers",
+        "description": "Premier Luxury Bridal & Wedding Makeup Studio in Bhubaneswar",
+        "publisher": {
+          "@id": "https://rakhimakeovers.pages.dev/#studio"
+        },
+        "inLanguage": "en-IN"
+      },
       {
         "@type": ["BeautySalon", "HairAndBeautySalon", "LocalBusiness"],
         "@id": "https://rakhimakeovers.pages.dev/#studio",

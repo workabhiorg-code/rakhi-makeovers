@@ -1,10 +1,34 @@
-# Robots.txt for Rakhi Makeovers
-# Allow all search engine crawlers (Googlebot, Bingbot, Chrome etc.)
+# ==============================================================================
+# Robots.txt for Rakhi Makeovers | Luxury Bridal Makeup Studio
+# Domain: https://rakhimakeovers.pages.dev/
+# ==============================================================================
 
+# 1. Googlebot (Main Web Indexer)
+User-agent: Googlebot
+Allow: /
+Allow: /assets/
+Allow: /assets/images/
+Allow: /assets/css/
+Allow: /assets/js/
+Disallow: /scripts/
+Disallow: /node_modules/
+
+# 2. Googlebot-Image (Google Image Search Indexer)
+User-agent: Googlebot-Image
+Allow: /assets/images/
+Allow: /
+
+# 3. Bingbot (Microsoft Bing Webmaster Indexer)
+User-agent: Bingbot
+Allow: /
+Disallow: /scripts/
+Disallow: /node_modules/
+
+# 4. All Other Verified Search Crawlers
 User-agent: *
 Allow: /
 Disallow: /scripts/
 Disallow: /node_modules/
 
-# Sitemaps
+# Canonical Sitemap Declaration for Fast Discovery & Crawling
 Sitemap: https://rakhimakeovers.pages.dev/sitemap.xml
