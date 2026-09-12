@@ -8,9 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBeforeAfterSlider();
   initServiceFilters();
   initGalleryFilterAndLightbox();
-  initBridalPackageEstimator();
   initBookingWizard();
-  initFaqAccordion();
   initFloatingActions();
   initNewsletter();
 });
@@ -98,39 +96,43 @@ function initScrollAnimations() {
     });
   }, {
     threshold: 0.15,
-    rootMargin: '0px 0px -40px 0px'
+    rootMargin: '0px 0px -50px 0px'
   });
 
   revealElements.forEach(el => revealObserver.observe(el));
 }
 
 /* ==========================================================================
-   3. BEFORE & AFTER TRANSFORMATION SLIDER
+   3. BEFORE & AFTER INTERACTIVE SLIDER
    ========================================================================== */
 function initBeforeAfterSlider() {
   const container = document.querySelector('.comparison-container');
-  const afterImg = document.querySelector('.comparison-image.after-img');
-  const handle = document.querySelector('.comparison-slider-handle');
+  const beforeImg = document.querySelector('.before-img');
+  const sliderHandle = document.querySelector('.comparison-slider-handle');
 
-  if (!container || !afterImg || !handle) return;
+  if (!container || !beforeImg || !sliderHandle) return;
 
   let isDragging = false;
 
-  function updateSlider(xPos) {
+  function setSliderPosition(xPos) {
     const rect = container.getBoundingClientRect();
-    let percentage = ((xPos - rect.left) / rect.width) * 100;
+    let offsetX = xPos - rect.left;
 
-    // Constrain percentage between 0 and 100
-    percentage = Math.max(0, Math.min(100, percentage));
+    // Constrain within container bounds
+    if (offsetX < 0) offsetX = 0;
+    if (offsetX > rect.width) offsetX = rect.width;
 
-    afterImg.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
-    handle.style.left = `${percentage}%`;
+    const percentage = (offsetX / rect.width) * 100;
+
+    // Set clip path on before image
+    beforeImg.style.clipPath = `polygon(0 0, ${percentage}% 0, ${percentage}% 100%, 0 100%)`;
+    sliderHandle.style.left = `${percentage}%`;
   }
 
-  // Mouse Events
+  // Mouse events
   container.addEventListener('mousedown', (e) => {
     isDragging = true;
-    updateSlider(e.clientX);
+    setSliderPosition(e.clientX);
   });
 
   window.addEventListener('mouseup', () => {
@@ -139,13 +141,13 @@ function initBeforeAfterSlider() {
 
   window.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
-    updateSlider(e.clientX);
+    setSliderPosition(e.clientX);
   });
 
-  // Touch Events (Mobile/Tablet)
+  // Touch events for mobile
   container.addEventListener('touchstart', (e) => {
     isDragging = true;
-    updateSlider(e.touches[0].clientX);
+    setSliderPosition(e.touches[0].clientX);
   }, { passive: true });
 
   window.addEventListener('touchend', () => {
@@ -154,29 +156,28 @@ function initBeforeAfterSlider() {
 
   window.addEventListener('touchmove', (e) => {
     if (!isDragging) return;
-    updateSlider(e.touches[0].clientX);
+    setSliderPosition(e.touches[0].clientX);
   }, { passive: true });
 }
 
 /* ==========================================================================
-   4. SERVICES FILTER TABS
+   4. SERVICES FILTERING
    ========================================================================== */
 function initServiceFilters() {
   const filterBtns = document.querySelectorAll('.service-filter-btn');
   const serviceCards = document.querySelectorAll('.service-card');
 
-  if (!filterBtns.length || !serviceCards.length) return;
-
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+      // Toggle active tab button
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      const filterValue = btn.getAttribute('data-filter');
+      const filterVal = btn.getAttribute('data-filter');
 
       serviceCards.forEach(card => {
         const category = card.getAttribute('data-category');
-        if (filterValue === 'all' || category === filterValue || category.includes(filterValue)) {
+        if (filterVal === 'all' || category === filterVal) {
           card.style.display = 'flex';
           setTimeout(() => {
             card.style.opacity = '1';
@@ -184,10 +185,10 @@ function initServiceFilters() {
           }, 50);
         } else {
           card.style.opacity = '0';
-          card.style.transform = 'translateY(15px)';
+          card.style.transform = 'translateY(20px)';
           setTimeout(() => {
             card.style.display = 'none';
-          }, 250);
+          }, 300);
         }
       });
     });
@@ -195,20 +196,20 @@ function initServiceFilters() {
 }
 
 /* ==========================================================================
-   5. BRIDAL LOOKBOOK GALLERY & LIGHTBOX
+   5. GALLERY FILTER & LIGHTBOX MODAL
    ========================================================================== */
 function initGalleryFilterAndLightbox() {
   const filterBtns = document.querySelectorAll('.gallery-filter-btn');
   const galleryItems = document.querySelectorAll('.gallery-item');
   const lightbox = document.querySelector('.lightbox-modal');
   const lightboxImg = document.querySelector('.lightbox-img-wrap img');
+  const lightboxCat = document.querySelector('.lightbox-cat');
   const lightboxTitle = document.querySelector('.lightbox-title');
-  const lightboxCategory = document.querySelector('.lightbox-cat');
   const lightboxDesc = document.querySelector('.lightbox-desc');
   const lightboxClose = document.querySelector('.lightbox-close-btn');
   const lightboxBookBtn = document.querySelector('.lightbox-book-btn');
 
-  // Filter Buttons
+  // Filter items
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       filterBtns.forEach(b => b.classList.remove('active'));
@@ -217,29 +218,38 @@ function initGalleryFilterAndLightbox() {
       const filter = btn.getAttribute('data-filter');
 
       galleryItems.forEach(item => {
-        const itemCat = item.getAttribute('data-category');
-        if (filter === 'all' || itemCat === filter) {
+        const category = item.getAttribute('data-category');
+        if (filter === 'all' || category === filter) {
           item.style.display = 'block';
+          setTimeout(() => {
+            item.style.opacity = '1';
+            item.style.transform = 'scale(1)';
+          }, 50);
         } else {
-          item.style.display = 'none';
+          item.style.opacity = '0';
+          item.style.transform = 'scale(0.95)';
+          setTimeout(() => {
+            item.style.display = 'none';
+          }, 300);
         }
       });
     });
   });
 
-  // Lightbox Open
+  // Open Lightbox
   galleryItems.forEach(item => {
     item.addEventListener('click', () => {
-      const img = item.querySelector('.gallery-item-img');
-      const title = item.querySelector('.gallery-item-title')?.textContent || 'Bridal Look';
-      const category = item.querySelector('.gallery-item-category')?.textContent || 'Rakhi Makeovers';
-      const description = item.getAttribute('data-description') || 'Bespoke bridal makeover tailored with international HD luxury cosmetics, custom lashes, and floral styling.';
+      const src = item.getAttribute('data-lightbox-src');
+      const cat = item.getAttribute('data-lightbox-cat');
+      const title = item.getAttribute('data-lightbox-title');
+      const desc = item.getAttribute('data-lightbox-desc');
 
       if (lightbox && lightboxImg) {
-        lightboxImg.src = img.src;
+        lightboxImg.src = src;
+        lightboxImg.alt = title;
+        if (lightboxCat) lightboxCat.textContent = cat;
         if (lightboxTitle) lightboxTitle.textContent = title;
-        if (lightboxCategory) lightboxCategory.textContent = category;
-        if (lightboxDesc) lightboxDesc.textContent = description;
+        if (lightboxDesc) lightboxDesc.textContent = desc;
 
         lightbox.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -247,13 +257,24 @@ function initGalleryFilterAndLightbox() {
     });
   });
 
-  // Lightbox Close
-  if (lightboxClose && lightbox) {
+  // Close Lightbox
+  if (lightboxClose) {
     lightboxClose.addEventListener('click', closeLightbox);
+  }
+
+  if (lightbox) {
     lightbox.addEventListener('click', (e) => {
-      if (e.target === lightbox) closeLightbox();
+      if (e.target === lightbox) {
+        closeLightbox();
+      }
     });
   }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox && lightbox.classList.contains('active')) {
+      closeLightbox();
+    }
+  });
 
   function closeLightbox() {
     if (lightbox) {
@@ -275,133 +296,7 @@ function initGalleryFilterAndLightbox() {
 }
 
 /* ==========================================================================
-   6. INTERACTIVE BRIDAL PACKAGE ESTIMATOR / CALCULATOR
-   ========================================================================== */
-function initBridalPackageEstimator() {
-  const baseLookBtns = document.querySelectorAll('.calc-base-option');
-  const addonItems = document.querySelectorAll('.calc-addon-item');
-  const familyCountSelect = document.getElementById('calc-family-count');
-  const citySelect = document.getElementById('calc-city');
-  const totalPriceDisplay = document.querySelector('.calc-total-price');
-  const selectedList = document.querySelector('.calc-selected-items-list');
-  const whatsappQuoteBtn = document.querySelector('.calc-whatsapp-btn');
-
-  let state = {
-    baseLookName: 'Royal Traditional HD Bridal',
-    baseLookPrice: 28000,
-    addons: [],
-    familyCount: 0,
-    familyPricePerHead: 4500,
-    travelPrice: 0,
-    cityName: 'Bhubaneswar Studio (No Travel Fee)'
-  };
-
-  function calculateTotal() {
-    let total = state.baseLookPrice;
-
-    // Addons
-    state.addons.forEach(add => {
-      total += add.price;
-    });
-
-    // Family Makeup
-    total += state.familyCount * state.familyPricePerHead;
-
-    // Travel
-    total += state.travelPrice;
-
-    // Update Display
-    if (totalPriceDisplay) {
-      totalPriceDisplay.textContent = `₹${total.toLocaleString('en-IN')}`;
-    }
-
-    // Update Summary List
-    if (selectedList) {
-      selectedList.innerHTML = `
-        <li class="calc-selected-item">
-          <span>${state.baseLookName}</span>
-          <span class="item-val">₹${state.baseLookPrice.toLocaleString('en-IN')}</span>
-        </li>
-        ${state.addons.map(a => `
-          <li class="calc-selected-item">
-            <span>+ ${a.name}</span>
-            <span class="item-val">₹${a.price.toLocaleString('en-IN')}</span>
-          </li>
-        `).join('')}
-        ${state.familyCount > 0 ? `
-          <li class="calc-selected-item">
-            <span>+ Family / Bridesmaids (${state.familyCount} person${state.familyCount > 1 ? 's' : ''})</span>
-            <span class="item-val">₹${(state.familyCount * state.familyPricePerHead).toLocaleString('en-IN')}</span>
-          </li>
-        ` : ''}
-        ${state.travelPrice > 0 ? `
-          <li class="calc-selected-item">
-            <span>+ Travel (${state.cityName})</span>
-            <span class="item-val">₹${state.travelPrice.toLocaleString('en-IN')}</span>
-          </li>
-        ` : ''}
-      `;
-    }
-
-    // Update WhatsApp pre-filled link
-    if (whatsappQuoteBtn) {
-      const textMessage = `Hello Rakhi Makeovers! I customized a bridal package on your website:%0A- Package: ${state.baseLookName}%0A- Extra Events / Addons: ${state.addons.map(a => a.name).join(', ') || 'None'}%0A- Family Guests: ${state.familyCount} persons%0A- Location: ${state.cityName}%0A- Estimated Total: ₹${total.toLocaleString('en-IN')}%0A%0AI would like to check date availability and confirm!`;
-      whatsappQuoteBtn.href = `https://wa.me/919876543210?text=${textMessage}`;
-    }
-  }
-
-  // Base Look Selection
-  baseLookBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      baseLookBtns.forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-
-      state.baseLookName = btn.getAttribute('data-name');
-      state.baseLookPrice = parseInt(btn.getAttribute('data-price'), 10);
-      calculateTotal();
-    });
-  });
-
-  // Addon Checkbox toggles
-  addonItems.forEach(item => {
-    item.addEventListener('click', () => {
-      item.classList.toggle('checked');
-      const name = item.getAttribute('data-name');
-      const price = parseInt(item.getAttribute('data-price'), 10);
-
-      if (item.classList.contains('checked')) {
-        state.addons.push({ name, price });
-      } else {
-        state.addons = state.addons.filter(a => a.name !== name);
-      }
-      calculateTotal();
-    });
-  });
-
-  // Family Count Select
-  if (familyCountSelect) {
-    familyCountSelect.addEventListener('change', (e) => {
-      state.familyCount = parseInt(e.target.value, 10) || 0;
-      calculateTotal();
-    });
-  }
-
-  // City / Travel Select
-  if (citySelect) {
-    citySelect.addEventListener('change', (e) => {
-      const selectedOption = e.target.options[e.target.selectedIndex];
-      state.travelPrice = parseInt(selectedOption.getAttribute('data-travel-cost'), 10) || 0;
-      state.cityName = selectedOption.textContent;
-      calculateTotal();
-    });
-  }
-
-  // Initial Calculation
-  calculateTotal();
-}
-
-/* ==========================================================================
-   7. BOOKING & CONSULTATION WIZARD
+   6. BOOKING & CONSULTATION WIZARD
    ========================================================================== */
 function initBookingWizard() {
   const form = document.getElementById('bridal-booking-form');
@@ -482,28 +377,7 @@ function initBookingWizard() {
 }
 
 /* ==========================================================================
-   8. FAQS ACCORDION
-   ========================================================================== */
-function initFaqAccordion() {
-  const faqItems = document.querySelectorAll('.faq-item');
-
-  faqItems.forEach(item => {
-    const header = item.querySelector('.faq-header');
-    header.addEventListener('click', () => {
-      const isActive = item.classList.contains('active');
-
-      // Close all other FAQs
-      faqItems.forEach(other => other.classList.remove('active'));
-
-      if (!isActive) {
-        item.classList.add('active');
-      }
-    });
-  });
-}
-
-/* ==========================================================================
-   9. FLOATING ACTIONS (BACK TO TOP & WHATSAPP)
+   7. FLOATING ACTIONS (BACK TO TOP & WHATSAPP)
    ========================================================================== */
 function initFloatingActions() {
   const topBtn = document.querySelector('.float-top');
@@ -525,7 +399,7 @@ function initFloatingActions() {
 }
 
 /* ==========================================================================
-   10. NEWSLETTER & TOAST NOTIFICATION
+   8. NEWSLETTER & TOAST NOTIFICATION
    ========================================================================== */
 function initNewsletter() {
   const newsletterForm = document.querySelector('.footer-newsletter-form');

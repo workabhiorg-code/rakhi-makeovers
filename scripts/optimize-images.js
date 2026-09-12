@@ -53,9 +53,10 @@ async function optimizeImages() {
 
   // Create Open Graph (OG) 1200x630 Social Banner
   console.log('\n--- Generating Open Graph Social Share Image (1200x630) ---');
-  const heroImgPath = path.join(imagesDir, 'hero_bridal.jpg');
+  const heroImgPath = fs.existsSync(path.join(imagesDir, 'hero_bridal.webp')) 
+    ? path.join(imagesDir, 'hero_bridal.webp') 
+    : path.join(imagesDir, 'hero_bridal.jpg');
   const ogJpgPath = path.join(imagesDir, 'og-cover.jpg');
-  const ogWebpPath = path.join(imagesDir, 'og-cover.webp');
 
   if (fs.existsSync(heroImgPath)) {
     // Composite luxury dark gradient overlay + title banner
@@ -110,12 +111,7 @@ async function optimizeImages() {
       .jpeg({ quality: 88 })
       .toFile(ogJpgPath);
 
-    await sharp(ogJpgPath)
-      .webp({ quality: 85 })
-      .toFile(ogWebpPath);
-
     console.log(`✓ Generated ${ogJpgPath}`);
-    console.log(`✓ Generated ${ogWebpPath}`);
   }
 
   // Generate Branded Favicons & App Icons

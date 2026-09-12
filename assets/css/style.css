@@ -940,7 +940,7 @@ button {
 
 .service-card-media {
   position: relative;
-  height: 260px;
+  height: 220px;
   overflow: hidden;
 }
 
@@ -957,34 +957,34 @@ button {
 
 .service-tag-badge {
   position: absolute;
-  top: 1rem;
-  left: 1rem;
+  top: 0.85rem;
+  left: 0.85rem;
   background: rgba(18, 9, 15, 0.85);
   backdrop-filter: blur(8px);
   color: var(--color-gold-light);
-  padding: 0.35rem 0.85rem;
+  padding: 0.3rem 0.75rem;
   border-radius: var(--radius-full);
-  font-size: 0.75rem;
+  font-size: 0.725rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .service-price-pill {
   position: absolute;
-  bottom: 1rem;
-  right: 1rem;
+  bottom: 0.85rem;
+  right: 0.85rem;
   background: linear-gradient(135deg, var(--color-gold-primary), var(--color-rose-gold));
   color: #12090F;
-  padding: 0.4rem 0.95rem;
+  padding: 0.35rem 0.85rem;
   border-radius: var(--radius-full);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
 .service-card-content {
-  padding: 1.75rem;
+  padding: 1.35rem 1.4rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -992,43 +992,43 @@ button {
 
 .service-card-title {
   font-family: var(--font-serif-display);
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--color-text-dark);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
 .service-card-desc {
-  font-size: 0.9rem;
+  font-size: 0.865rem;
   color: var(--color-text-muted);
-  line-height: 1.6;
-  margin-bottom: 1.25rem;
+  line-height: 1.5;
+  margin-bottom: 0.85rem;
 }
 
 .service-inclusions-list {
   list-style: none;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.15rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.35rem;
 }
 
 .service-inclusions-list li {
-  font-size: 0.85rem;
+  font-size: 0.825rem;
   color: var(--color-text-dark);
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .service-inclusions-list li i {
   color: var(--color-rose-gold);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
 }
 
 .service-card-footer {
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.75rem;
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
