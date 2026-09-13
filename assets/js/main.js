@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBeforeAfterSlider();
   initServiceFilters();
   initGalleryFilterAndLightbox();
+  initTestimonialCarousel();
   initBookingWizard();
   initFloatingActions();
   initNewsletter();
@@ -306,6 +307,23 @@ function initBookingWizard() {
   const stepNodes = document.querySelectorAll('.wizard-step-node');
   const nextBtns = form.querySelectorAll('.btn-next-step');
   const prevBtns = form.querySelectorAll('.btn-prev-step');
+  const dateInput = document.getElementById('booking-date');
+
+  // Ensure wedding date cannot be in the past
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.min = today;
+  }
+
+  // Clear validation red border on input
+  form.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('input', () => {
+      input.style.borderColor = '';
+    });
+    input.addEventListener('change', () => {
+      input.style.borderColor = '';
+    });
+  });
 
   let currentStep = 1;
 
@@ -327,7 +345,7 @@ function initBookingWizard() {
 
   nextBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      // Validate inputs in current step
+      // Validate required inputs in current step
       const currentStepContainer = form.querySelector(`.booking-form-step[data-step="${currentStep}"]`);
       const inputs = currentStepContainer.querySelectorAll('input[required], select[required]');
       let isValid = true;
@@ -355,25 +373,122 @@ function initBookingWizard() {
     });
   });
 
-  // Form Submit
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    const brideName = document.getElementById('booking-name')?.value || 'Bride';
-    const weddingDate = document.getElementById('booking-date')?.value || 'Upcoming Date';
+  // Function to process and dispatch booking to WhatsApp
+  function handleBookingSubmission() {
+    // 1. Cross-validate Step 1 required fields
+    const step1Container = form.querySelector('.booking-form-step[data-step="1"]');
+    const step1Inputs = step1Container ? step1Container.querySelectorAll('input[required], select[required]') : [];
+    for (const input of step1Inputs) {
+      if (!input.value.trim()) {
+        goToStep(1);
+        input.style.borderColor = '#FF6B6B';
+        input.focus();
+        showToast('Please fill in your ' + (input.previousElementSibling?.textContent?.replace('*', '').trim() || 'required details'));
+        return;
+      }
+    }
+
+    // 2. Cross-validate Step 2 required fields
+    const step2Container = form.querySelector('.booking-form-step[data-step="2"]');
+    const step2Inputs = step2Container ? step2Container.querySelectorAll('input[required], select[required]') : [];
+    for (const input of step2Inputs) {
+      if (!input.value.trim()) {
+        goToStep(2);
+        input.style.borderColor = '#FF6B6B';
+        input.focus();
+        showToast('Please fill in your ' + (input.previousElementSibling?.textContent?.replace('*', '').trim() || 'event details'));
+        return;
+      }
+    }
+
+    // 3. Extract all 10 booking fields
+    const brideName = document.getElementById('booking-name')?.value.trim() || 'Bride';
+    const phone = document.getElementById('booking-phone')?.value.trim() || 'Not specified';
+    const email = document.getElementById('booking-email')?.value.trim() || 'Not specified';
+    const instagram = document.getElementById('booking-instagram')?.value.trim() || 'Not specified';
+    const weddingDate = document.getElementById('booking-date')?.value || 'TBD';
     const serviceType = document.getElementById('booking-service')?.value || 'Bridal Makeover';
-    const phone = document.getElementById('booking-phone')?.value || '';
+    const venue = document.getElementById('booking-venue')?.value.trim() || 'Bhubaneswar';
+    const readyTime = document.getElementById('booking-readytime')?.value.trim() || 'Flexible / TBD';
+    const guests = document.getElementById('booking-guests')?.value || 'Only Bride';
+    const notes = document.getElementById('booking-notes')?.value.trim() || 'None';
 
-    showToast(`Thank you, ${brideName}! Your bridal consultation request has been received. Our team will contact you shortly.`);
+    // 4. Format professional WhatsApp message with vertical layout and bold labels
+    const messageLines = [
+      '✨ *NEW BRIDAL CONSULTATION INQUIRY* ✨',
+      '*Rakhi Makeovers | Luxury Bridal Studio*',
+      '━━━━━━━━━━━━━━━━━━━━',
+      '',
+      '👰 *Bride Full Name:*',
+      brideName,
+      '',
+      '📞 *WhatsApp / Phone Number:*',
+      phone,
+      '',
+      '✉️ *Email Address:*',
+      email,
+      '',
+      '📸 *Instagram Handle:*',
+      instagram,
+      '',
+      '💍 *Wedding / Event Date:*',
+      weddingDate,
+      '',
+      '💄 *Makeover Service Requested:*',
+      serviceType,
+      '',
+      '📍 *Event City / Venue Name:*',
+      venue,
+      '',
+      '⏰ *Target Ready Time:*',
+      readyTime,
+      '',
+      '👥 *Additional Family Members for Makeup:*',
+      guests,
+      '',
+      '📝 *Special Notes / Preferences / Vision:*',
+      notes,
+      '',
+      '━━━━━━━━━━━━━━━━━━━━',
+      '💌 *Client Note:*',
+      'I want to know more and check booking date availability!'
+    ];
 
-    // Optional direct WhatsApp ping
+    const fullMessage = messageLines.join('\n');
+    const whatsappUrl = `https://wa.me/918249077825?text=${encodeURIComponent(fullMessage)}`;
+
+    showToast(`✨ Thank you, ${brideName}! Opening WhatsApp to connect with Rakhi Makeovers...`);
+
+    // 5. Direct navigation to bypass popup blocker limitations
+    try {
+      const newWin = window.open(whatsappUrl, '_blank');
+      if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+        window.location.href = whatsappUrl;
+      }
+    } catch (err) {
+      window.location.href = whatsappUrl;
+    }
+
+    // 6. Reset form and return to step 1
     setTimeout(() => {
-      const confirmMsg = `Hi Rakhi Makeovers, I just submitted an appointment request on your website:%0A- Name: ${brideName}%0A- Wedding Date: ${weddingDate}%0A- Service: ${serviceType}%0A- Phone: ${phone}%0A%0APlease confirm my booking slot!`;
-      window.open(`https://wa.me/919876543210?text=${confirmMsg}`, '_blank');
       form.reset();
       goToStep(1);
     }, 1500);
+  }
+
+  // Handle both form submission & explicit submit button click
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    handleBookingSubmission();
   });
+
+  const submitBtn = form.querySelector('button[type="submit"]');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      handleBookingSubmission();
+    });
+  }
 }
 
 /* ==========================================================================
@@ -429,4 +544,169 @@ function showToast(message) {
   setTimeout(() => {
     toast.classList.remove('show');
   }, 4500);
+}
+
+/* ==========================================================================
+   9. REAL BRIDES TESTIMONIALS AUTO-SLIDER (3-Second Cycle)
+   ========================================================================== */
+function initTestimonialCarousel() {
+  const track = document.getElementById('testimonials-track');
+  const wrapper = document.querySelector('.testimonials-slider-wrapper');
+  const prevBtn = document.querySelector('.slider-prev-btn');
+  const nextBtn = document.querySelector('.slider-next-btn');
+  const dotsContainer = document.getElementById('testimonial-dots');
+  
+  if (!track || !wrapper) return;
+
+  const cards = track.querySelectorAll('.testimonial-card');
+  const totalCards = cards.length;
+  if (totalCards === 0) return;
+
+  let currentIndex = 0;
+  let autoSlideTimer = null;
+  let isPaused = false;
+
+  // Dynamically generate navigation dots matching number of unique reviews
+  if (dotsContainer) {
+    dotsContainer.innerHTML = '';
+    cards.forEach((_, idx) => {
+      const dot = document.createElement('button');
+      dot.className = `slider-dot ${idx === 0 ? 'active' : ''}`;
+      dot.setAttribute('aria-label', `View review ${idx + 1}`);
+      dot.addEventListener('click', () => {
+        goToSlide(idx);
+        restartTimer();
+      });
+      dotsContainer.appendChild(dot);
+    });
+  }
+
+  function getVisibleCards() {
+    if (window.innerWidth <= 768) return 1;
+    if (window.innerWidth <= 1024) return 2;
+    return 3;
+  }
+
+  function updateSliderPosition() {
+    const visibleCards = getVisibleCards();
+    const maxIndex = Math.max(0, totalCards - visibleCards);
+
+    if (currentIndex > maxIndex) {
+      currentIndex = 0;
+    } else if (currentIndex < 0) {
+      currentIndex = maxIndex;
+    }
+
+    const cardWidth = cards[0].getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(track).gap) || 28;
+    const offset = currentIndex * (cardWidth + gap);
+
+    track.style.transform = `translateX(-${offset}px)`;
+
+    // Update active dot
+    const dots = dotsContainer?.querySelectorAll('.slider-dot') || [];
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === currentIndex);
+    });
+  }
+
+  function nextSlide() {
+    const visibleCards = getVisibleCards();
+    const maxIndex = Math.max(0, totalCards - visibleCards);
+    if (currentIndex >= maxIndex) {
+      currentIndex = 0;
+    } else {
+      currentIndex++;
+    }
+    updateSliderPosition();
+  }
+
+  function prevSlide() {
+    const visibleCards = getVisibleCards();
+    const maxIndex = Math.max(0, totalCards - visibleCards);
+    if (currentIndex <= 0) {
+      currentIndex = maxIndex;
+    } else {
+      currentIndex--;
+    }
+    updateSliderPosition();
+  }
+
+  function goToSlide(index) {
+    currentIndex = index;
+    updateSliderPosition();
+  }
+
+  function startAutoSlide() {
+    stopAutoSlide();
+    autoSlideTimer = setInterval(() => {
+      if (!isPaused) {
+        nextSlide();
+      }
+    }, 3000);
+  }
+
+  function stopAutoSlide() {
+    if (autoSlideTimer) {
+      clearInterval(autoSlideTimer);
+      autoSlideTimer = null;
+    }
+  }
+
+  function restartTimer() {
+    stopAutoSlide();
+    startAutoSlide();
+  }
+
+  // Prev / Next button listeners
+  prevBtn?.addEventListener('click', () => {
+    prevSlide();
+    restartTimer();
+  });
+
+  nextBtn?.addEventListener('click', () => {
+    nextSlide();
+    restartTimer();
+  });
+
+  // Pause on mouse hover & resume on leave
+  wrapper.addEventListener('mouseenter', () => { isPaused = true; });
+  wrapper.addEventListener('mouseleave', () => { isPaused = false; });
+
+  // Touch Swipe gestures for Mobile
+  let startX = 0;
+  let isSwiping = false;
+
+  wrapper.addEventListener('touchstart', (e) => {
+    isPaused = true;
+    startX = e.touches[0].clientX;
+    isSwiping = true;
+  }, { passive: true });
+
+  wrapper.addEventListener('touchend', (e) => {
+    if (!isSwiping) return;
+    isSwiping = false;
+    isPaused = false;
+    const endX = e.changedTouches[0].clientX;
+    const diff = startX - endX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
+        nextSlide();
+      } else {
+        prevSlide();
+      }
+      restartTimer();
+    }
+  });
+
+  // Resize handler to recalculate dimensions
+  window.addEventListener('resize', () => {
+    updateSliderPosition();
+  });
+
+  // Start 3-second auto-slide
+  setTimeout(() => {
+    updateSliderPosition();
+    startAutoSlide();
+  }, 100);
 }
