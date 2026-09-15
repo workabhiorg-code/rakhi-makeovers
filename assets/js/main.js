@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initBookingWizard();
   initFloatingActions();
   initNewsletter();
+  initDynamicSync();
 });
 
 /* ==========================================================================
@@ -710,3 +711,114 @@ function initTestimonialCarousel() {
     startAutoSlide();
   }, 100);
 }
+
+/* ==========================================================================
+   10. REAL-TIME DATA HYDRATION (FROM ADMIN / API)
+   ========================================================================== */
+function initDynamicSync() {
+  fetchServicesSync();
+  fetchGallerySync();
+  fetchReviewsSync();
+}
+
+async function fetchServicesSync() {
+  try {
+    const res = await fetch('/api/services');
+    if (!res.ok) return;
+    const services = await res.json();
+    if (!Array.isArray(services) || services.length === 0) return;
+
+    const grid = document.querySelector('.services-cards-grid');
+    if (!grid) return;
+
+    grid.innerHTML = services.map(s => `
+      <div class="service-card reveal-fade-up active" data-category="${s.category || 'bridal'}">
+        <div class="service-card-media">
+          <img src="${s.image || 'assets/images/bridal_traditional.webp'}" alt="${s.title}" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+        </div>
+        <div class="service-card-content">
+          <h3 class="service-card-title">${s.title}</h3>
+          <p class="service-card-desc">${s.description || ''}</p>
+          <ul class="service-inclusions-list">
+            ${(s.inclusions || []).map(inc => `<li><i class="fa-solid fa-check text-rose"></i> ${inc}</li>`).join('')}
+          </ul>
+          <div class="service-card-footer">
+            <span class="service-duration"><i class="fa-regular fa-clock"></i> ${s.duration || '2.5 Hours'}</span>
+            <a href="#booking" class="btn btn-sm btn-primary">Book Look</a>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    initServiceFilters();
+  } catch (e) {
+    // Graceful fallback to initial HTML
+  }
+}
+
+async function fetchGallerySync() {
+  try {
+    const res = await fetch('/api/gallery');
+    if (!res.ok) return;
+    const gallery = await res.json();
+    if (!Array.isArray(gallery) || gallery.length === 0) return;
+
+    const grid = document.querySelector('.gallery-masonry-grid');
+    if (!grid) return;
+
+    grid.innerHTML = gallery.map(item => `
+      <div class="gallery-item reveal-fade-up active" data-category="${item.category || 'traditional'}" data-lightbox-src="${item.image}" data-lightbox-cat="${item.categoryName || 'Bridal Look'}" data-lightbox-title="${item.title}" data-lightbox-desc="${item.description || ''}">
+        <img src="${item.image}" alt="${item.altText || item.title}" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+        <div class="gallery-item-overlay">
+          <span class="gallery-item-category">${item.categoryName || 'Bridal Look'}</span>
+          <h3 class="gallery-item-title">${item.title}</h3>
+          <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
+        </div>
+      </div>
+    `).join('');
+
+    initGalleryFilterAndLightbox();
+  } catch (e) {
+    // Graceful fallback to initial HTML
+  }
+}
+
+async function fetchReviewsSync() {
+  try {
+    const res = await fetch('/api/reviews');
+    if (!res.ok) return;
+    const reviews = await res.json();
+    if (!Array.isArray(reviews) || reviews.length === 0) return;
+
+    const track = document.getElementById('testimonials-track');
+    if (!track) return;
+
+    track.innerHTML = reviews.map(rev => `
+      <div class="testimonial-card">
+        <div class="testi-quote-icon"><i class="fa-solid fa-quote-left"></i></div>
+        <div class="testi-stars">
+          ${Array(rev.rating || 5).fill('<i class="fa-solid fa-star"></i>').join('')}
+        </div>
+        <p class="testi-text">“${rev.reviewText}”</p>
+        <div class="testi-author">
+          <img src="${rev.avatarImage || 'assets/images/bridal_pastel.webp'}" alt="${rev.authorName}" class="author-avatar" width="50" height="50" loading="lazy" decoding="async">
+          <div class="author-info">
+            <h4>
+              ${rev.authorProfileUrl ? `
+                <a href="${rev.authorProfileUrl}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                  ${rev.authorName} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem; color: var(--color-gold-primary); margin-left: 0.2rem;"></i>
+                </a>
+              ` : rev.authorName}
+            </h4>
+            <p><i class="fa-brands fa-google" style="color: #EA4335; margin-right: 0.25rem;"></i> ${rev.source || 'Google Verified Review'} ${rev.timeAgo ? `(${rev.timeAgo})` : ''}</p>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    initTestimonialCarousel();
+  } catch (e) {
+    // Graceful fallback to initial HTML
+  }
+}
+

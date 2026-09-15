@@ -1,0 +1,62 @@
+[
+  {
+    "id": "gallery-1",
+    "title": "Royal Crimson Heritage",
+    "category": "traditional",
+    "categoryName": "Traditional Red",
+    "image": "assets/images/bridal_traditional.webp",
+    "description": "Intricate zari red lehenga with royal kohl smokey eyes, warm gold pigment, matha patti, and classic matte vermillion lips.",
+    "altText": "Royal Crimson Heritage Bride",
+    "order": 1
+  },
+  {
+    "id": "gallery-2",
+    "title": "Blush Romance Glass-Skin",
+    "category": "pastel",
+    "categoryName": "Pastel & Modern",
+    "image": "assets/images/bridal_pastel.webp",
+    "description": "Pastel pink & peach lehenga with translucent glow foundation, rose shimmer lid foils, and soft textured floral bun.",
+    "altText": "Blush Romance Glass-Skin Bride",
+    "order": 2
+  },
+  {
+    "id": "gallery-3",
+    "title": "Couture Hollywood Waves",
+    "category": "reception",
+    "categoryName": "Reception & Glam",
+    "image": "assets/images/bridal_reception.webp",
+    "description": "Strobe-illuminated cheekbones, velvet chocolate smokey eyes, gloss nude lip, and timeless Hollywood glam cascade curls.",
+    "altText": "Couture Reception Hollywood Waves Look",
+    "order": 3
+  },
+  {
+    "id": "gallery-4",
+    "title": "South Indian Kanjeevaram",
+    "category": "temple",
+    "categoryName": "Temple & Heritage",
+    "image": "assets/images/gallery_south_indian.webp",
+    "description": "Pure gold Kanjeevaram silk saree paired with long floral jada braid, temple jewellery setting, and bronze luminous skin.",
+    "altText": "South Indian Temple Kanjeevaram Bride",
+    "order": 4
+  },
+  {
+    "id": "gallery-5",
+    "title": "Royal Nikah Elegance",
+    "category": "temple",
+    "categoryName": "Temple & Nikah",
+    "image": "assets/images/gallery_nikah.webp",
+    "description": "Intricate emerald green & ivory outfit with sculpted winged kohl, luminous airbrush finish, and ornate Passa/Jhummar framing.",
+    "altText": "Royal Nikah Elegance Look",
+    "order": 5
+  },
+  {
+    "id": "gallery-6",
+    "title": "Sangeet Night Celebration",
+    "category": "reception",
+    "categoryName": "Reception & Sangeet",
+    "image": "assets/images/gallery_sangeet.webp",
+    "description": "High-energy dance proof glam with shimmer gold pigment, peach coral glow, and voluminous half-up bohemian curls.",
+    "altText": "Sangeet Night Celebration Look",
+    "order": 6
+  }
+]
