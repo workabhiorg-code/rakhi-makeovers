@@ -18,6 +18,7 @@ fs.mkdirSync(distDir, { recursive: true });
 const itemsToCopy = [
   'index.html',
   'admin.html',
+  'admin',
   '404.html',
   'favicon.ico',
   'favicon.svg',

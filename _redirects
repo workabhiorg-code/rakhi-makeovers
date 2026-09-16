@@ -1,6 +1,6 @@
-# Cloudflare Pages Redirects
+# Cloudflare Pages / Workers Redirects
 # Documentation: https://developers.cloudflare.com/pages/configuration/redirects/
 
 # Standard Clean Redirection
 /index.html    /            301
-/admin         /admin.html  200
+
