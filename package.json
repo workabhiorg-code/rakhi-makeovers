@@ -19,8 +19,5 @@
     "rakhi-makeovers"
   ],
   "author": "Rakhi Makeovers",
-  "license": "ISC",
-  "devDependencies": {
-    "sharp": "^0.35.4"
-  }
+  "license": "ISC"
 }
