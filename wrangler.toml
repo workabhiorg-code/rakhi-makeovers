@@ -1,0 +1,8 @@
+name = "rakhi-makeovers"
+compatibility_date = "2024-09-23"
+
+[observability]
+enabled = true
+
+[assets]
+directory = "dist"
