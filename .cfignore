@@ -3,6 +3,8 @@ node_modules
 node_modules/**
 scripts
 scripts/**
+Rakhi unused media
+Rakhi unused media/**
 .git
 .github
 .gitignore

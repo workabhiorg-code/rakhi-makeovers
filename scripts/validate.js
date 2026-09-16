@@ -67,7 +67,7 @@ function checkDirFiles(dir) {
   for (const entry of entries) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (entry.name !== 'node_modules' && entry.name !== '.git') {
+      if (!['node_modules', '.git', 'dist', 'Rakhi unused media'].includes(entry.name)) {
         checkDirFiles(full);
       }
     } else if (entry.isFile()) {
