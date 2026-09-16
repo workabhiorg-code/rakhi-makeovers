@@ -1,0 +1,13 @@
+# Wrangler Pages Ignore
+node_modules
+node_modules/**
+scripts
+scripts/**
+.git
+.github
+.gitignore
+.cfignore
+.wranglerignore
+package.json
+package-lock.json
+*.log
