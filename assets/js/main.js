@@ -1,8 +1,10 @@
 /**
  * RAKHI MAKEOVERS - LUXURY BRIDAL ARTISTRY INTERACTIVE ENGINE
+ * High-performance, 60fps/120fps optimized frontend engine
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  ScrollManager.init();
   initNavbar();
   initScrollAnimations();
   initBeforeAfterSlider();
@@ -16,6 +18,64 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /* ==========================================================================
+   0. DSA PERFORMANCE & SECURITY UTILITIES
+   ========================================================================== */
+
+/**
+ * Escape HTML to prevent XSS injection
+ */
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * DSA: Generic debounce utility (O(1) cancellation window)
+ */
+function debounce(func, wait = 100) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+/**
+ * DSA: Unified 60fps/120fps Scroll Dispatcher with RequestAnimationFrame
+ * Prevents Layout Thrashing and unthrottled scroll event lag
+ */
+const ScrollManager = {
+  ticking: false,
+  callbacks: [],
+  register(cb) {
+    this.callbacks.push(cb);
+  },
+  init() {
+    window.addEventListener('scroll', () => {
+      if (!this.ticking) {
+        requestAnimationFrame(() => {
+          const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+          for (let i = 0; i < this.callbacks.length; i++) {
+            this.callbacks[i](scrollY);
+          }
+          this.ticking = false;
+        });
+        this.ticking = true;
+      }
+    }, { passive: true });
+  }
+};
+
+/* ==========================================================================
    1. NAVBAR & NAVIGATION
    ========================================================================== */
 function initNavbar() {
@@ -23,14 +83,34 @@ function initNavbar() {
   const menuToggle = document.querySelector('.menu-toggle-btn');
   const navMenu = document.querySelector('.nav-menu');
   const navLinks = document.querySelectorAll('.nav-link');
+  const sections = document.querySelectorAll('section[id]');
 
-  // Sticky Navbar on Scroll
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-      header.classList.add('scrolled');
-    } else {
-      header.classList.remove('scrolled');
+  // Register with ScrollManager for sticky header & scrollspy
+  ScrollManager.register((scrollY) => {
+    // Sticky Navbar
+    if (header) {
+      if (scrollY > 50) {
+        header.classList.add('scrolled');
+      } else {
+        header.classList.remove('scrolled');
+      }
     }
+
+    // ScrollSpy with threshold
+    sections.forEach(current => {
+      const sectionHeight = current.offsetHeight;
+      const sectionTop = current.offsetTop - 120;
+      const sectionId = current.getAttribute('id');
+      const targetLink = document.querySelector(`.nav-link[href*="${sectionId}"]`);
+
+      if (targetLink) {
+        if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+          targetLink.classList.add('active');
+        } else {
+          targetLink.classList.remove('active');
+        }
+      }
+    });
   });
 
   // Mobile Menu Toggle
@@ -56,26 +136,6 @@ function initNavbar() {
       });
     });
   }
-
-  // Active Link on Scroll Spy
-  const sections = document.querySelectorAll('section[id]');
-  window.addEventListener('scroll', () => {
-    const scrollY = window.pageYOffset;
-    sections.forEach(current => {
-      const sectionHeight = current.offsetHeight;
-      const sectionTop = current.offsetTop - 120;
-      const sectionId = current.getAttribute('id');
-      const targetLink = document.querySelector(`.nav-link[href*="${sectionId}"]`);
-
-      if (targetLink) {
-        if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
-          targetLink.classList.add('active');
-        } else {
-          targetLink.classList.remove('active');
-        }
-      }
-    });
-  });
 }
 
 /* ==========================================================================
@@ -223,7 +283,6 @@ function initBeforeAfterSlider() {
       const elapsed = now - startTime;
       if (elapsed < duration) {
         const progress = elapsed / duration;
-        // Smooth sine wave swing: 50% -> 38% -> 62% -> 50%
         const wave = Math.sin(progress * Math.PI * 2);
         const peekPct = 50 + wave * 14;
         render(peekPct);
@@ -237,46 +296,53 @@ function initBeforeAfterSlider() {
 }
 
 /* ==========================================================================
-   4. SERVICES FILTERING
+   4. SERVICES FILTERING (Event Delegation & Idempotent)
    ========================================================================== */
 function initServiceFilters() {
-  const filterBtns = document.querySelectorAll('.service-filter-btn');
+  const filterContainer = document.querySelector('.services-filter-tabs');
+  if (!filterContainer || filterContainer.dataset.filterBound) return;
+
+  filterContainer.dataset.filterBound = 'true';
+  filterContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.service-filter-btn');
+    if (!btn) return;
+
+    filterContainer.querySelectorAll('.service-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const filterVal = btn.getAttribute('data-filter');
+    applyServiceFilter(filterVal);
+  });
+}
+
+function applyServiceFilter(filterVal) {
   const serviceCards = document.querySelectorAll('.service-card');
-
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      // Toggle active tab button
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const filterVal = btn.getAttribute('data-filter');
-
-      serviceCards.forEach(card => {
-        const category = card.getAttribute('data-category');
-        if (filterVal === 'all' || category === filterVal) {
-          card.style.display = 'flex';
-          setTimeout(() => {
-            card.style.opacity = '1';
-            card.style.transform = 'translateY(0)';
-          }, 50);
-        } else {
-          card.style.opacity = '0';
-          card.style.transform = 'translateY(20px)';
-          setTimeout(() => {
-            card.style.display = 'none';
-          }, 300);
-        }
+  serviceCards.forEach(card => {
+    const category = card.getAttribute('data-category');
+    if (filterVal === 'all' || category === filterVal) {
+      card.style.display = 'flex';
+      requestAnimationFrame(() => {
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(0)';
       });
-    });
+    } else {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(20px)';
+      setTimeout(() => {
+        if (card.style.opacity === '0') {
+          card.style.display = 'none';
+        }
+      }, 300);
+    }
   });
 }
 
 /* ==========================================================================
-   5. GALLERY FILTER & LIGHTBOX MODAL
+   5. GALLERY FILTER & LIGHTBOX MODAL (Event Delegation)
    ========================================================================== */
 function initGalleryFilterAndLightbox() {
-  const filterBtns = document.querySelectorAll('.gallery-filter-btn');
-  const galleryItems = document.querySelectorAll('.gallery-item');
+  const filterContainer = document.querySelector('.gallery-filter-tabs');
+  const galleryGrid = document.querySelector('.gallery-masonry-grid');
   const lightbox = document.querySelector('.lightbox-modal');
   const lightboxImg = document.querySelector('.lightbox-img-wrap img');
   const lightboxCat = document.querySelector('.lightbox-cat');
@@ -285,36 +351,28 @@ function initGalleryFilterAndLightbox() {
   const lightboxClose = document.querySelector('.lightbox-close-btn');
   const lightboxBookBtn = document.querySelector('.lightbox-book-btn');
 
-  // Filter items
-  filterBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach(b => b.classList.remove('active'));
+  // Filter Event Delegation
+  if (filterContainer && !filterContainer.dataset.filterBound) {
+    filterContainer.dataset.filterBound = 'true';
+    filterContainer.addEventListener('click', (e) => {
+      const btn = e.target.closest('.gallery-filter-btn');
+      if (!btn) return;
+
+      filterContainer.querySelectorAll('.gallery-filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
       const filter = btn.getAttribute('data-filter');
-
-      galleryItems.forEach(item => {
-        const category = item.getAttribute('data-category');
-        if (filter === 'all' || category === filter) {
-          item.style.display = 'block';
-          setTimeout(() => {
-            item.style.opacity = '1';
-            item.style.transform = 'scale(1)';
-          }, 50);
-        } else {
-          item.style.opacity = '0';
-          item.style.transform = 'scale(0.95)';
-          setTimeout(() => {
-            item.style.display = 'none';
-          }, 300);
-        }
-      });
+      applyGalleryFilter(filter);
     });
-  });
+  }
 
-  // Open Lightbox
-  galleryItems.forEach(item => {
-    item.addEventListener('click', () => {
+  // Gallery Click Event Delegation for Lightbox
+  if (galleryGrid && !galleryGrid.dataset.lightboxBound) {
+    galleryGrid.dataset.lightboxBound = 'true';
+    galleryGrid.addEventListener('click', (e) => {
+      const item = e.target.closest('.gallery-item');
+      if (!item) return;
+
       const src = item.getAttribute('data-lightbox-src');
       const cat = item.getAttribute('data-lightbox-cat');
       const title = item.getAttribute('data-lightbox-title');
@@ -331,26 +389,38 @@ function initGalleryFilterAndLightbox() {
         document.body.style.overflow = 'hidden';
       }
     });
-  });
-
-  // Close Lightbox
-  if (lightboxClose) {
-    lightboxClose.addEventListener('click', closeLightbox);
   }
 
-  if (lightbox) {
+  // Lightbox Close Handlers (Bound once)
+  if (lightbox && !lightbox.dataset.closeBound) {
+    lightbox.dataset.closeBound = 'true';
+
+    if (lightboxClose) {
+      lightboxClose.addEventListener('click', closeLightbox);
+    }
+
     lightbox.addEventListener('click', (e) => {
       if (e.target === lightbox) {
         closeLightbox();
       }
     });
-  }
 
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && lightbox && lightbox.classList.contains('active')) {
-      closeLightbox();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && lightbox.classList.contains('active')) {
+        closeLightbox();
+      }
+    });
+
+    if (lightboxBookBtn) {
+      lightboxBookBtn.addEventListener('click', () => {
+        closeLightbox();
+        const bookingSec = document.getElementById('booking');
+        if (bookingSec) {
+          bookingSec.scrollIntoView({ behavior: 'smooth' });
+        }
+      });
     }
-  });
+  }
 
   function closeLightbox() {
     if (lightbox) {
@@ -358,17 +428,28 @@ function initGalleryFilterAndLightbox() {
       document.body.style.overflow = 'auto';
     }
   }
+}
 
-  // Lightbox CTA trigger scroll to booking
-  if (lightboxBookBtn) {
-    lightboxBookBtn.addEventListener('click', () => {
-      closeLightbox();
-      const bookingSec = document.getElementById('booking');
-      if (bookingSec) {
-        bookingSec.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  }
+function applyGalleryFilter(filter) {
+  const galleryItems = document.querySelectorAll('.gallery-item');
+  galleryItems.forEach(item => {
+    const category = item.getAttribute('data-category');
+    if (filter === 'all' || category === filter) {
+      item.style.display = 'block';
+      requestAnimationFrame(() => {
+        item.style.opacity = '1';
+        item.style.transform = 'scale(1)';
+      });
+    } else {
+      item.style.opacity = '0';
+      item.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        if (item.style.opacity === '0') {
+          item.style.display = 'none';
+        }
+      }, 300);
+    }
+  });
 }
 
 /* ==========================================================================
@@ -376,7 +457,8 @@ function initGalleryFilterAndLightbox() {
    ========================================================================== */
 function initBookingWizard() {
   const form = document.getElementById('bridal-booking-form');
-  if (!form) return;
+  if (!form || form.dataset.wizardBound) return;
+  form.dataset.wizardBound = 'true';
 
   const steps = form.querySelectorAll('.booking-form-step');
   const stepNodes = document.querySelectorAll('.wizard-step-node');
@@ -420,9 +502,8 @@ function initBookingWizard() {
 
   nextBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      // Validate required inputs in current step
       const currentStepContainer = form.querySelector(`.booking-form-step[data-step="${currentStep}"]`);
-      const inputs = currentStepContainer.querySelectorAll('input[required], select[required]');
+      const inputs = currentStepContainer ? currentStepContainer.querySelectorAll('input[required], select[required]') : [];
       let isValid = true;
 
       inputs.forEach(input => {
@@ -448,9 +529,7 @@ function initBookingWizard() {
     });
   });
 
-  // Function to process and dispatch booking to WhatsApp
   function handleBookingSubmission() {
-    // 1. Cross-validate Step 1 required fields
     const step1Container = form.querySelector('.booking-form-step[data-step="1"]');
     const step1Inputs = step1Container ? step1Container.querySelectorAll('input[required], select[required]') : [];
     for (const input of step1Inputs) {
@@ -463,7 +542,6 @@ function initBookingWizard() {
       }
     }
 
-    // 2. Cross-validate Step 2 required fields
     const step2Container = form.querySelector('.booking-form-step[data-step="2"]');
     const step2Inputs = step2Container ? step2Container.querySelectorAll('input[required], select[required]') : [];
     for (const input of step2Inputs) {
@@ -476,7 +554,6 @@ function initBookingWizard() {
       }
     }
 
-    // 3. Extract all 10 booking fields
     const brideName = document.getElementById('booking-name')?.value.trim() || 'Bride';
     const phone = document.getElementById('booking-phone')?.value.trim() || 'Not specified';
     const email = document.getElementById('booking-email')?.value.trim() || 'Not specified';
@@ -488,7 +565,6 @@ function initBookingWizard() {
     const guests = document.getElementById('booking-guests')?.value || 'Only Bride';
     const notes = document.getElementById('booking-notes')?.value.trim() || 'None';
 
-    // 4. Format professional WhatsApp message with vertical layout and bold labels
     const messageLines = [
       '✨ *NEW BRIDAL CONSULTATION INQUIRY* ✨',
       '*Rakhi Makeovers | Luxury Bridal Studio*',
@@ -534,7 +610,6 @@ function initBookingWizard() {
 
     showToast(`✨ Thank you, ${brideName}! Opening WhatsApp to connect with Rakhi Makeovers...`);
 
-    // 5. Direct navigation to bypass popup blocker limitations
     try {
       const newWin = window.open(whatsappUrl, '_blank');
       if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
@@ -544,14 +619,12 @@ function initBookingWizard() {
       window.location.href = whatsappUrl;
     }
 
-    // 6. Reset form and return to step 1
     setTimeout(() => {
       form.reset();
       goToStep(1);
     }, 1500);
   }
 
-  // Handle both form submission & explicit submit button click
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     handleBookingSubmission();
@@ -567,16 +640,18 @@ function initBookingWizard() {
 }
 
 /* ==========================================================================
-   7. FLOATING ACTIONS (BACK TO TOP & WHATSAPP)
+   7. FLOATING ACTIONS (ScrollManager Integration)
    ========================================================================== */
 function initFloatingActions() {
   const topBtn = document.querySelector('.float-top');
 
-  window.addEventListener('scroll', () => {
-    if (window.scrollY > 400) {
-      topBtn?.classList.add('visible');
-    } else {
-      topBtn?.classList.remove('visible');
+  ScrollManager.register((scrollY) => {
+    if (topBtn) {
+      if (scrollY > 400) {
+        topBtn.classList.add('visible');
+      } else {
+        topBtn.classList.remove('visible');
+      }
     }
   });
 
@@ -593,7 +668,8 @@ function initFloatingActions() {
    ========================================================================== */
 function initNewsletter() {
   const newsletterForm = document.querySelector('.footer-newsletter-form');
-  if (newsletterForm) {
+  if (newsletterForm && !newsletterForm.dataset.bound) {
+    newsletterForm.dataset.bound = 'true';
     newsletterForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const input = newsletterForm.querySelector('input[type="email"]');
@@ -613,7 +689,7 @@ function showToast(message) {
     document.body.appendChild(toast);
   }
 
-  toast.innerHTML = `<i class="fa-solid fa-sparkles text-gold"></i> <span>${message}</span>`;
+  toast.innerHTML = `<i class="fa-solid fa-sparkles text-gold"></i> <span>${escapeHtml(message)}</span>`;
   toast.classList.add('show');
 
   setTimeout(() => {
@@ -641,7 +717,6 @@ function initTestimonialCarousel() {
   let autoSlideTimer = null;
   let isPaused = false;
 
-  // Dynamically generate navigation dots matching number of unique reviews
   if (dotsContainer) {
     dotsContainer.innerHTML = '';
     cards.forEach((_, idx) => {
@@ -678,7 +753,6 @@ function initTestimonialCarousel() {
 
     track.style.transform = `translateX(-${offset}px)`;
 
-    // Update active dot
     const dots = dotsContainer?.querySelectorAll('.slider-dot') || [];
     dots.forEach((dot, idx) => {
       dot.classList.toggle('active', idx === currentIndex);
@@ -774,12 +848,11 @@ function initTestimonialCarousel() {
     }
   });
 
-  // Resize handler to recalculate dimensions
-  window.addEventListener('resize', () => {
+  // DSA: Debounced Resize handler to prevent excessive reflows
+  window.addEventListener('resize', debounce(() => {
     updateSliderPosition();
-  });
+  }, 100));
 
-  // Start 3-second auto-slide
   setTimeout(() => {
     updateSliderPosition();
     startAutoSlide();
@@ -806,27 +879,25 @@ async function fetchServicesSync() {
     if (!grid) return;
 
     grid.innerHTML = services.map(s => `
-      <div class="service-card reveal-fade-up active" data-category="${s.category || 'bridal'}">
+      <div class="service-card reveal-fade-up active" data-category="${escapeHtml(s.category || 'bridal')}">
         <div class="service-card-media">
-          <img src="${s.image || 'assets/images/bridal_traditional.webp'}" alt="${s.title}" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+          <img src="${escapeHtml(s.image || 'assets/images/bridal_traditional.webp')}" alt="${escapeHtml(s.title)}" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
         </div>
         <div class="service-card-content">
-          <h3 class="service-card-title">${s.title}</h3>
-          <p class="service-card-desc">${s.description || ''}</p>
+          <h3 class="service-card-title">${escapeHtml(s.title)}</h3>
+          <p class="service-card-desc">${escapeHtml(s.description || '')}</p>
           <ul class="service-inclusions-list">
-            ${(s.inclusions || []).map(inc => `<li><i class="fa-solid fa-check text-rose"></i> ${inc}</li>`).join('')}
+            ${(s.inclusions || []).map(inc => `<li><i class="fa-solid fa-check text-rose"></i> ${escapeHtml(inc)}</li>`).join('')}
           </ul>
           <div class="service-card-footer">
-            <span class="service-duration"><i class="fa-regular fa-clock"></i> ${s.duration || '2.5 Hours'}</span>
+            <span class="service-duration"><i class="fa-regular fa-clock"></i> ${escapeHtml(s.duration || '2.5 Hours')}</span>
             <a href="#booking" class="btn btn-sm btn-primary">Book Look</a>
           </div>
         </div>
       </div>
     `).join('');
-
-    initServiceFilters();
   } catch (e) {
-    // Graceful fallback to initial HTML
+    // Graceful fallback to initial static HTML
   }
 }
 
@@ -841,19 +912,17 @@ async function fetchGallerySync() {
     if (!grid) return;
 
     grid.innerHTML = gallery.map(item => `
-      <div class="gallery-item reveal-fade-up active" data-category="${item.category || 'traditional'}" data-lightbox-src="${item.image}" data-lightbox-cat="${item.categoryName || 'Bridal Look'}" data-lightbox-title="${item.title}" data-lightbox-desc="${item.description || ''}">
-        <img src="${item.image}" alt="${item.altText || item.title}" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+      <div class="gallery-item reveal-fade-up active" data-category="${escapeHtml(item.category || 'traditional')}" data-lightbox-src="${escapeHtml(item.image)}" data-lightbox-cat="${escapeHtml(item.categoryName || 'Bridal Look')}" data-lightbox-title="${escapeHtml(item.title)}" data-lightbox-desc="${escapeHtml(item.description || '')}">
+        <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.altText || item.title)}" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
         <div class="gallery-item-overlay">
-          <span class="gallery-item-category">${item.categoryName || 'Bridal Look'}</span>
-          <h3 class="gallery-item-title">${item.title}</h3>
+          <span class="gallery-item-category">${escapeHtml(item.categoryName || 'Bridal Look')}</span>
+          <h3 class="gallery-item-title">${escapeHtml(item.title)}</h3>
           <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
         </div>
       </div>
     `).join('');
-
-    initGalleryFilterAndLightbox();
   } catch (e) {
-    // Graceful fallback to initial HTML
+    // Graceful fallback to initial static HTML
   }
 }
 
@@ -873,18 +942,18 @@ async function fetchReviewsSync() {
         <div class="testi-stars">
           ${Array(rev.rating || 5).fill('<i class="fa-solid fa-star"></i>').join('')}
         </div>
-        <p class="testi-text">“${rev.reviewText}”</p>
+        <p class="testi-text">“${escapeHtml(rev.reviewText)}”</p>
         <div class="testi-author">
-          <img src="${rev.avatarImage || 'assets/images/bridal_pastel.webp'}" alt="${rev.authorName}" class="author-avatar" width="50" height="50" loading="lazy" decoding="async">
+          <img src="${escapeHtml(rev.avatarImage || 'assets/images/bridal_pastel.webp')}" alt="${escapeHtml(rev.authorName)}" class="author-avatar" width="50" height="50" loading="lazy" decoding="async">
           <div class="author-info">
             <h4>
               ${rev.authorProfileUrl ? `
-                <a href="${rev.authorProfileUrl}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
-                  ${rev.authorName} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem; color: var(--color-gold-primary); margin-left: 0.2rem;"></i>
+                <a href="${escapeHtml(rev.authorProfileUrl)}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: none;">
+                  ${escapeHtml(rev.authorName)} <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 0.7rem; color: var(--color-gold-primary); margin-left: 0.2rem;"></i>
                 </a>
-              ` : rev.authorName}
+              ` : escapeHtml(rev.authorName)}
             </h4>
-            <p><i class="fa-brands fa-google" style="color: #EA4335; margin-right: 0.25rem;"></i> ${rev.source || 'Google Verified Review'} ${rev.timeAgo ? `(${rev.timeAgo})` : ''}</p>
+            <p><i class="fa-brands fa-google" style="color: #EA4335; margin-right: 0.25rem;"></i> ${escapeHtml(rev.source || 'Google Verified Review')} ${rev.timeAgo ? `(${escapeHtml(rev.timeAgo)})` : ''}</p>
           </div>
         </div>
       </div>
@@ -892,7 +961,6 @@ async function fetchReviewsSync() {
 
     initTestimonialCarousel();
   } catch (e) {
-    // Graceful fallback to initial HTML
+    // Graceful fallback to initial static HTML
   }
 }
-

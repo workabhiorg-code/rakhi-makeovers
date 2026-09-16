@@ -114,7 +114,13 @@ export async function onRequest(context) {
 
   if (method === 'GET') {
     const reviews = await getReviews(env);
-    return new Response(JSON.stringify(reviews), { headers: corsHeaders, status: 200 });
+    return new Response(JSON.stringify(reviews), {
+      headers: {
+        ...corsHeaders,
+        'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
+      },
+      status: 200
+    });
   }
 
   // Auth check for mutations
