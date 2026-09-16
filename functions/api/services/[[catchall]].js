@@ -4,7 +4,7 @@ const DEFAULT_SERVICES = [
     id: "service-1",
     title: "Classic Saree Glam",
     category: "glam",
-    image: "assets/images/gallery_south_indian.webp",
+    image: "assets/images/uploads/upload_1789550720421_4de6f166.jpg",
     description: "Graceful heritage aesthetics crafted for silk sarees and traditional ceremonies, featuring luminous skin, traditional defined kohl eyes, and meticulous saree pleating.",
     inclusions: [
       "Sweat-Resistant Radiant Base & Strobe Highlight",
@@ -18,7 +18,7 @@ const DEFAULT_SERVICES = [
     id: "service-2",
     title: "Engagement Glow",
     category: "glam",
-    image: "assets/images/gallery_sangeet.webp",
+    image: "assets/images/uploads/upload_1789550752235_fb6ff277.jpg",
     description: "Luminous, lit-from-within radiance designed for ring ceremonies and cocktail evenings, with dewy glass skin, soft shimmer eye artistry, and romantic bouncy blowout waves.",
     inclusions: [
       "Dewy Glass-Skin Prep & Multi-Dimensional Highlighting",
@@ -32,7 +32,7 @@ const DEFAULT_SERVICES = [
     id: "service-3",
     title: "Classic Timeless Glam",
     category: "glam",
-    image: "assets/images/bridal_pastel.webp",
+    image: "assets/images/uploads/upload_1789550776500_b3c6ffd4.jpg",
     description: "Sophisticated, red-carpet-inspired glamour tailored to elevate evening receptions, featuring sultry soft smokey eyes, sculpted cheekbones, and Hollywood waves.",
     inclusions: [
       "4K HD Camera-Ready Base with Velvet Contour",
@@ -46,7 +46,7 @@ const DEFAULT_SERVICES = [
     id: "service-4",
     title: "Classic Beauty",
     category: "beauty",
-    image: "assets/images/gallery_christian.webp",
+    image: "assets/images/uploads/upload_1789550866594_c6144368.jpg",
     description: "Understated vintage elegance emphasizing refined natural features, featuring silky satin-finish skin, crisp winged liner, sculpted brows, and a statement lip.",
     inclusions: [
       "Velvety Satin Skin Finish & Soft-Focus Airbrush",
@@ -60,7 +60,7 @@ const DEFAULT_SERVICES = [
     id: "service-5",
     title: "Soft Bridal Elegance",
     category: "bridal",
-    image: "assets/images/bridal_reception.webp",
+    image: "assets/images/uploads/upload_1789550797403_11028f77.jpg",
     description: "An ethereal, modern bridal look featuring soft pastel hues, dewy porcelain skin, delicate shimmer lids, and effortless floral-adorned bridal styling.",
     inclusions: [
       "Weightless Breathable All-Day Long-Wear HD Base",
@@ -74,7 +74,7 @@ const DEFAULT_SERVICES = [
     id: "service-6",
     title: "Signature Bridal Look",
     category: "bridal",
-    image: "assets/images/bridal_traditional.webp",
+    image: "assets/images/uploads/upload_1789550811538_b7448357.jpg",
     description: "Our iconic royal couture bridal masterpiece—featuring 16-hour sweat-proof HD artistry, regal smoked kohl eyes, sculpted bone structure, and grand lehenga draping.",
     inclusions: [
       "16-Hour Mandap & Tear-Proof Ultra-HD Bridal Base",

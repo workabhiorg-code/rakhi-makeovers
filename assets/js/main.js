@@ -105,61 +105,135 @@ function initScrollAnimations() {
 }
 
 /* ==========================================================================
-   3. BEFORE & AFTER INTERACTIVE SLIDER
+   3. BEFORE & AFTER INTERACTIVE SLIDER (High-Performance 60fps)
    ========================================================================== */
 function initBeforeAfterSlider() {
   const container = document.querySelector('.comparison-container');
-  const beforeImg = document.querySelector('.before-img');
+  const afterImg = document.querySelector('.after-img');
   const sliderHandle = document.querySelector('.comparison-slider-handle');
+  const hint = document.querySelector('.comparison-hint');
 
-  if (!container || !beforeImg || !sliderHandle) return;
+  if (!container || !afterImg || !sliderHandle) return;
 
   let isDragging = false;
+  let targetPercentage = 50;
+  let currentPercentage = 50;
+  let rafId = null;
+  let hasUserInteracted = false;
 
-  function setSliderPosition(xPos) {
-    const rect = container.getBoundingClientRect();
-    let offsetX = xPos - rect.left;
-
-    // Constrain within container bounds
-    if (offsetX < 0) offsetX = 0;
-    if (offsetX > rect.width) offsetX = rect.width;
-
-    const percentage = (offsetX / rect.width) * 100;
-
-    // Set clip path on before image
-    beforeImg.style.clipPath = `polygon(0 0, ${percentage}% 0, ${percentage}% 100%, 0 100%)`;
+  function render(percentage) {
+    percentage = Math.max(0, Math.min(100, percentage));
+    currentPercentage = percentage;
+    // Reveal after-image from right edge to slider position
+    afterImg.style.clipPath = `polygon(${percentage}% 0, 100% 0, 100% 100%, ${percentage}% 100%)`;
     sliderHandle.style.left = `${percentage}%`;
   }
 
-  // Mouse events
-  container.addEventListener('mousedown', (e) => {
+  function updatePositionFromClientX(clientX) {
+    const rect = container.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const offsetX = clientX - rect.left;
+    const pct = (offsetX / rect.width) * 100;
+    targetPercentage = Math.max(0, Math.min(100, pct));
+    
+    if (!rafId) {
+      rafId = requestAnimationFrame(() => {
+        render(targetPercentage);
+        rafId = null;
+      });
+    }
+  }
+
+  // Unified Pointer Events for desktop mouse, mobile touch, and tablet stylus
+  container.addEventListener('pointerdown', (e) => {
     isDragging = true;
-    setSliderPosition(e.clientX);
+    hasUserInteracted = true;
+    container.classList.add('active-dragging');
+    if (hint) hint.style.opacity = '0';
+    try {
+      container.setPointerCapture(e.pointerId);
+    } catch (err) {}
+    updatePositionFromClientX(e.clientX);
   });
 
-  window.addEventListener('mouseup', () => {
-    isDragging = false;
-  });
-
-  window.addEventListener('mousemove', (e) => {
+  container.addEventListener('pointermove', (e) => {
     if (!isDragging) return;
-    setSliderPosition(e.clientX);
+    updatePositionFromClientX(e.clientX);
   });
 
-  // Touch events for mobile
-  container.addEventListener('touchstart', (e) => {
-    isDragging = true;
-    setSliderPosition(e.touches[0].clientX);
-  }, { passive: true });
-
-  window.addEventListener('touchend', () => {
-    isDragging = false;
-  });
-
-  window.addEventListener('touchmove', (e) => {
+  const stopDragging = (e) => {
     if (!isDragging) return;
-    setSliderPosition(e.touches[0].clientX);
-  }, { passive: true });
+    isDragging = false;
+    container.classList.remove('active-dragging');
+    try {
+      if (e && e.pointerId && container.hasPointerCapture(e.pointerId)) {
+        container.releasePointerCapture(e.pointerId);
+      }
+    } catch (err) {}
+  };
+
+  container.addEventListener('pointerup', stopDragging);
+  container.addEventListener('pointercancel', stopDragging);
+
+  // Click & tap jump support
+  container.addEventListener('click', (e) => {
+    hasUserInteracted = true;
+    if (hint) hint.style.opacity = '0';
+    updatePositionFromClientX(e.clientX);
+  });
+
+  // Keyboard navigation accessibility
+  container.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      hasUserInteracted = true;
+      if (hint) hint.style.opacity = '0';
+      render(Math.max(0, currentPercentage - 5));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      hasUserInteracted = true;
+      if (hint) hint.style.opacity = '0';
+      render(Math.min(100, currentPercentage + 5));
+    }
+  });
+
+  // Initial render at exact center 50%
+  render(50);
+
+  // Subtle peek demonstration animation on first scroll into viewport
+  if ('IntersectionObserver' in window) {
+    const peekObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !hasUserInteracted) {
+          peekObserver.unobserve(entry.target);
+          runPeekDemo();
+        }
+      });
+    }, { threshold: 0.35 });
+    peekObserver.observe(container);
+  }
+
+  function runPeekDemo() {
+    if (hasUserInteracted) return;
+    const startTime = performance.now();
+    const duration = 1200;
+
+    function animatePeek(now) {
+      if (hasUserInteracted) return;
+      const elapsed = now - startTime;
+      if (elapsed < duration) {
+        const progress = elapsed / duration;
+        // Smooth sine wave swing: 50% -> 38% -> 62% -> 50%
+        const wave = Math.sin(progress * Math.PI * 2);
+        const peekPct = 50 + wave * 14;
+        render(peekPct);
+        requestAnimationFrame(animatePeek);
+      } else {
+        render(50);
+      }
+    }
+    requestAnimationFrame(animatePeek);
+  }
 }
 
 /* ==========================================================================

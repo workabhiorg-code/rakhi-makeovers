@@ -370,6 +370,9 @@ function openGalleryModal(galleryId = null) {
   // Sync category name helper
   catInput.onchange = () => {
     const map = {
+      'bridal': 'Bridal Royalty',
+      'glam': 'Glam & Saree',
+      'beauty': 'Classic Beauty',
       'traditional': 'Traditional Red',
       'pastel': 'Pastel & Modern',
       'temple': 'Temple & Nikah',

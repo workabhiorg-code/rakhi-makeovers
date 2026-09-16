@@ -507,7 +507,7 @@
           <!-- Card 1: Classic Saree Glam -->
           <div class="service-card reveal-fade-up" data-category="glam">
             <div class="service-card-media">
-              <img src="assets/images/gallery_south_indian.webp" alt="Classic Saree Glam Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+              <img src="assets/images/uploads/upload_1789550720421_4de6f166.jpg" alt="Classic Saree Glam Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
             </div>
             <div class="service-card-content">
               <h3 class="service-card-title">Classic Saree Glam</h3>
@@ -529,7 +529,7 @@
           <!-- Card 2: Engagement Glow -->
           <div class="service-card reveal-fade-up" data-category="glam">
             <div class="service-card-media">
-              <img src="assets/images/gallery_sangeet.webp" alt="Engagement Glow Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+              <img src="assets/images/uploads/upload_1789550752235_fb6ff277.jpg" alt="Engagement Glow Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
             </div>
             <div class="service-card-content">
               <h3 class="service-card-title">Engagement Glow</h3>
@@ -551,7 +551,7 @@
           <!-- Card 3: Classic Timeless Glam -->
           <div class="service-card reveal-fade-up" data-category="glam">
             <div class="service-card-media">
-              <img src="assets/images/bridal_pastel.webp" alt="Classic Timeless Glam Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+              <img src="assets/images/uploads/upload_1789550776500_b3c6ffd4.jpg" alt="Classic Timeless Glam Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
             </div>
             <div class="service-card-content">
               <h3 class="service-card-title">Classic Timeless Glam</h3>
@@ -573,7 +573,7 @@
           <!-- Card 4: Classic Beauty -->
           <div class="service-card reveal-fade-up" data-category="beauty">
             <div class="service-card-media">
-              <img src="assets/images/gallery_christian.webp" alt="Classic Beauty Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+              <img src="assets/images/uploads/upload_1789550866594_c6144368.jpg" alt="Classic Beauty Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
             </div>
             <div class="service-card-content">
               <h3 class="service-card-title">Classic Beauty</h3>
@@ -595,7 +595,7 @@
           <!-- Card 5: Soft Bridal Elegance -->
           <div class="service-card reveal-fade-up" data-category="bridal">
             <div class="service-card-media">
-              <img src="assets/images/bridal_reception.webp" alt="Soft Bridal Elegance Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+              <img src="assets/images/uploads/upload_1789550797403_11028f77.jpg" alt="Soft Bridal Elegance Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
             </div>
             <div class="service-card-content">
               <h3 class="service-card-title">Soft Bridal Elegance</h3>
@@ -617,7 +617,7 @@
           <!-- Card 6: Signature Bridal Look -->
           <div class="service-card reveal-fade-up" data-category="bridal">
             <div class="service-card-media">
-              <img src="assets/images/bridal_traditional.webp" alt="Signature Bridal Look Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
+              <img src="assets/images/uploads/upload_1789550811538_b7448357.jpg" alt="Signature Bridal Look Makeover" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
             </div>
             <div class="service-card-content">
               <h3 class="service-card-title">Signature Bridal Look</h3>
@@ -658,17 +658,22 @@
         <div class="before-after-wrapper">
           
           <!-- Interactive Drag Slider -->
-          <div class="comparison-container reveal-fade-up">
-            <span class="comparison-badge badge-before">Natural Skin</span>
-            <span class="comparison-badge badge-after">Rakhi Glow</span>
+          <div class="comparison-container reveal-fade-up" id="transformation-slider" role="region" aria-label="Before and After bridal transformation interactive comparison" tabindex="0">
+            <span class="comparison-badge badge-before">Before &bull; Bare Skin</span>
+            <span class="comparison-badge badge-after">After &bull; Rakhi Glow</span>
             
-            <img src="assets/images/before_look.webp" alt="Natural bare face before makeup" class="comparison-image before-img" width="600" height="700" loading="lazy" decoding="async">
-            <img src="assets/images/after_look.webp" alt="Bridal glam glow after makeup" class="comparison-image after-img" width="600" height="700" loading="lazy" decoding="async">
+            <img src="assets/images/before_look.webp" alt="Natural bare skin before bridal makeover - Soft Bridal Elegance" class="comparison-image before-img" width="800" height="1000" loading="lazy" decoding="async">
+            <img src="assets/images/after_look.webp" alt="Flawless bridal glow after makeover - Soft Bridal Elegance" class="comparison-image after-img" width="800" height="1000" loading="lazy" decoding="async">
 
-            <div class="comparison-slider-handle">
+            <div class="comparison-slider-handle" id="slider-handle" aria-hidden="true">
+              <div class="handle-line"></div>
               <div class="handle-button">
                 <i class="fa-solid fa-arrows-left-right"></i>
               </div>
+            </div>
+
+            <div class="comparison-hint">
+              <i class="fa-solid fa-hand-pointer"></i> <span>Drag or Tap to Compare</span>
             </div>
           </div>
 
@@ -721,72 +726,71 @@
           <div class="section-tag">Curated Portfolio</div>
           <h2 class="section-title">The Bridal Lookbook</h2>
           <p class="section-subtitle">
-            Explore our diverse bride portfolio across traditional red royalty, soft pastels, South Indian temple heritage, and modern reception glam.
+            Explore our curated transformations across royal bridal couture, soft ethereal elegance, heritage sarees, and modern reception glamour.
           </p>
         </div>
 
         <!-- Filter Controls -->
         <div class="gallery-filter-tabs reveal-fade-up">
-          <button class="gallery-filter-btn active" data-filter="all">All Real Brides</button>
-          <button class="gallery-filter-btn" data-filter="traditional">Traditional Red</button>
-          <button class="gallery-filter-btn" data-filter="pastel">Pastel &amp; Modern</button>
-          <button class="gallery-filter-btn" data-filter="temple">Temple &amp; Nikah</button>
-          <button class="gallery-filter-btn" data-filter="reception">Reception &amp; Sangeet</button>
+          <button class="gallery-filter-btn active" data-filter="all">All Real Looks</button>
+          <button class="gallery-filter-btn" data-filter="bridal">Bridal Royalty</button>
+          <button class="gallery-filter-btn" data-filter="glam">Glam &amp; Saree</button>
+          <button class="gallery-filter-btn" data-filter="beauty">Classic Beauty</button>
         </div>
 
         <!-- Masonry Grid -->
         <div class="gallery-masonry-grid">
           
-          <div class="gallery-item reveal-fade-up" data-category="traditional" data-lightbox-src="assets/images/bridal_traditional.webp" data-lightbox-cat="Traditional Red Royalty" data-lightbox-title="Royal Crimson Heritage Bride" data-lightbox-desc="Intricate zari red lehenga with royal kohl smokey eyes, warm gold pigment, matha patti, and classic matte vermillion lips.">
-            <img src="assets/images/bridal_traditional.webp" alt="Royal Crimson Heritage Bride" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+          <div class="gallery-item reveal-fade-up" data-category="bridal" data-lightbox-src="assets/images/uploads/upload_1789550811538_b7448357.jpg" data-lightbox-cat="Bridal Royalty" data-lightbox-title="Signature Bridal Look" data-lightbox-desc="Our iconic royal couture bridal masterpiece—featuring 16-hour sweat-proof HD artistry, regal smoked kohl eyes, sculpted bone structure, and grand lehenga draping.">
+            <img src="assets/images/uploads/upload_1789550811538_b7448357.jpg" alt="Signature Bridal Look by Rakhi Makeovers" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
             <div class="gallery-item-overlay">
-              <span class="gallery-item-category">Traditional Red</span>
-              <h3 class="gallery-item-title">Royal Crimson Heritage</h3>
+              <span class="gallery-item-category">Bridal Royalty</span>
+              <h3 class="gallery-item-title">Signature Bridal Look</h3>
               <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
             </div>
           </div>
 
-          <div class="gallery-item reveal-fade-up" data-category="pastel" data-lightbox-src="assets/images/bridal_pastel.webp" data-lightbox-cat="Pastel &amp; Modern" data-lightbox-title="Blush Romance Glass-Skin Look" data-lightbox-desc="Pastel pink &amp; peach lehenga with translucent glow foundation, rose shimmer lid foils, and soft textured floral bun.">
-            <img src="assets/images/bridal_pastel.webp" alt="Blush Romance Glass-Skin Bride" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+          <div class="gallery-item reveal-fade-up" data-category="bridal" data-lightbox-src="assets/images/uploads/upload_1789550797403_11028f77.jpg" data-lightbox-cat="Soft Bridal" data-lightbox-title="Soft Bridal Elegance" data-lightbox-desc="An ethereal, modern bridal look featuring soft pastel hues, dewy porcelain skin, delicate shimmer lids, and effortless floral-adorned bridal styling.">
+            <img src="assets/images/uploads/upload_1789550797403_11028f77.jpg" alt="Soft Bridal Elegance Makeover" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
             <div class="gallery-item-overlay">
-              <span class="gallery-item-category">Pastel &amp; Modern</span>
-              <h3 class="gallery-item-title">Blush Romance Glass-Skin</h3>
+              <span class="gallery-item-category">Soft Bridal</span>
+              <h3 class="gallery-item-title">Soft Bridal Elegance</h3>
               <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
             </div>
           </div>
 
-          <div class="gallery-item reveal-fade-up" data-category="reception" data-lightbox-src="assets/images/bridal_reception.webp" data-lightbox-cat="Reception &amp; Glam" data-lightbox-title="Couture Reception Hollywood Waves" data-lightbox-desc="Strobe-illuminated cheekbones, velvet chocolate smokey eyes, gloss nude lip, and timeless Hollywood glam cascade curls.">
-            <img src="assets/images/bridal_reception.webp" alt="Couture Reception Hollywood Waves Look" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+          <div class="gallery-item reveal-fade-up" data-category="glam" data-lightbox-src="assets/images/uploads/upload_1789550720421_4de6f166.jpg" data-lightbox-cat="Glam &amp; Saree" data-lightbox-title="Classic Saree Glam" data-lightbox-desc="Graceful heritage aesthetics crafted for silk sarees and traditional ceremonies, featuring luminous skin, traditional defined kohl eyes, and meticulous saree pleating.">
+            <img src="assets/images/uploads/upload_1789550720421_4de6f166.jpg" alt="Classic Saree Glam Look" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
             <div class="gallery-item-overlay">
-              <span class="gallery-item-category">Reception &amp; Glam</span>
-              <h3 class="gallery-item-title">Couture Hollywood Waves</h3>
+              <span class="gallery-item-category">Glam &amp; Saree</span>
+              <h3 class="gallery-item-title">Classic Saree Glam</h3>
               <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
             </div>
           </div>
 
-          <div class="gallery-item reveal-fade-up" data-category="temple" data-lightbox-src="assets/images/gallery_south_indian.webp" data-lightbox-cat="Temple &amp; Heritage" data-lightbox-title="South Indian Temple Kanjeevaram" data-lightbox-desc="Pure gold Kanjeevaram silk saree paired with long floral jada braid, temple jewellery setting, and bronze luminous skin.">
-            <img src="assets/images/gallery_south_indian.webp" alt="South Indian Temple Kanjeevaram Bride" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+          <div class="gallery-item reveal-fade-up" data-category="glam" data-lightbox-src="assets/images/uploads/upload_1789550752235_fb6ff277.jpg" data-lightbox-cat="Engagement Glow" data-lightbox-title="Engagement Glow" data-lightbox-desc="Luminous, lit-from-within radiance designed for ring ceremonies and cocktail evenings, with dewy glass skin, soft shimmer eye artistry, and romantic bouncy blowout waves.">
+            <img src="assets/images/uploads/upload_1789550752235_fb6ff277.jpg" alt="Engagement Glow Makeover" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
             <div class="gallery-item-overlay">
-              <span class="gallery-item-category">Temple &amp; Heritage</span>
-              <h3 class="gallery-item-title">South Indian Kanjeevaram</h3>
+              <span class="gallery-item-category">Engagement Glow</span>
+              <h3 class="gallery-item-title">Engagement Glow</h3>
               <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
             </div>
           </div>
 
-          <div class="gallery-item reveal-fade-up" data-category="temple" data-lightbox-src="assets/images/gallery_nikah.webp" data-lightbox-cat="Temple &amp; Nikah" data-lightbox-title="Royal Nikah Elegance" data-lightbox-desc="Intricate emerald green &amp; ivory outfit with sculpted winged kohl, luminous airbrush finish, and ornate Passa/Jhummar framing.">
-            <img src="assets/images/gallery_nikah.webp" alt="Royal Nikah Elegance Look" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+          <div class="gallery-item reveal-fade-up" data-category="glam" data-lightbox-src="assets/images/uploads/upload_1789550776500_b3c6ffd4.jpg" data-lightbox-cat="Timeless Glam" data-lightbox-title="Classic Timeless Glam" data-lightbox-desc="Sophisticated, red-carpet-inspired glamour tailored to elevate evening receptions, featuring sultry soft smokey eyes, sculpted cheekbones, and Hollywood waves.">
+            <img src="assets/images/uploads/upload_1789550776500_b3c6ffd4.jpg" alt="Classic Timeless Glam Look" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
             <div class="gallery-item-overlay">
-              <span class="gallery-item-category">Temple &amp; Nikah</span>
-              <h3 class="gallery-item-title">Royal Nikah Elegance</h3>
+              <span class="gallery-item-category">Timeless Glam</span>
+              <h3 class="gallery-item-title">Classic Timeless Glam</h3>
               <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
             </div>
           </div>
 
-          <div class="gallery-item reveal-fade-up" data-category="reception" data-lightbox-src="assets/images/gallery_sangeet.webp" data-lightbox-cat="Reception &amp; Sangeet" data-lightbox-title="Sangeet Night Celebration" data-lightbox-desc="High-energy dance proof glam with shimmer gold pigment, peach coral glow, and voluminous half-up bohemian curls.">
-            <img src="assets/images/gallery_sangeet.webp" alt="Sangeet Night Celebration Look" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
+          <div class="gallery-item reveal-fade-up" data-category="beauty" data-lightbox-src="assets/images/uploads/upload_1789550866594_c6144368.jpg" data-lightbox-cat="Classic Beauty" data-lightbox-title="Classic Beauty" data-lightbox-desc="Understated vintage elegance emphasizing refined natural features, featuring silky satin-finish skin, crisp winged liner, sculpted brows, and a statement lip.">
+            <img src="assets/images/uploads/upload_1789550866594_c6144368.jpg" alt="Classic Beauty Makeover" class="gallery-item-img" width="400" height="500" loading="lazy" decoding="async">
             <div class="gallery-item-overlay">
-              <span class="gallery-item-category">Reception &amp; Sangeet</span>
-              <h3 class="gallery-item-title">Sangeet Night Celebration</h3>
+              <span class="gallery-item-category">Classic Beauty</span>
+              <h3 class="gallery-item-title">Classic Beauty</h3>
               <div class="gallery-item-view-btn"><span>View Look Details</span> <i class="fa-solid fa-arrow-right"></i></div>
             </div>
           </div>

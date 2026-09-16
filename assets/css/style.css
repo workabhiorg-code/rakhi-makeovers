@@ -1110,12 +1110,23 @@ button {
   position: relative;
   width: 100%;
   max-width: 580px;
-  height: 520px;
+  aspect-ratio: 4 / 5;
+  min-height: 440px;
+  max-height: 560px;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), var(--shadow-gold-glow);
-  border: 4px solid rgba(212, 175, 55, 0.3);
+  border: 3px solid rgba(212, 175, 55, 0.4);
   user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y pinch-zoom;
+  cursor: ew-resize;
+  outline: none;
+}
+
+.comparison-container:focus-visible {
+  border-color: var(--color-gold-primary);
+  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.35), 0 25px 60px rgba(0, 0, 0, 0.6);
 }
 
 .comparison-image {
@@ -1125,6 +1136,9 @@ button {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
+  pointer-events: none;
+  display: block;
 }
 
 .comparison-image.before-img {
@@ -1133,6 +1147,7 @@ button {
 
 .comparison-image.after-img {
   z-index: 2;
+  will-change: clip-path;
   clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
 }
 
@@ -1141,57 +1156,101 @@ button {
   top: 0;
   bottom: 0;
   left: 50%;
-  width: 4px;
-  background: linear-gradient(180deg, var(--color-gold-light), var(--color-gold-primary), var(--color-rose-gold));
+  width: 44px;
+  margin-left: -22px;
   z-index: 10;
-  cursor: ew-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  will-change: left;
+}
+
+.comparison-slider-handle .handle-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
   transform: translateX(-50%);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.8);
+  background: linear-gradient(180deg, var(--color-gold-light), var(--color-gold-primary), var(--color-rose-gold));
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.9);
 }
 
 .handle-button {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 50px;
-  height: 50px;
+  position: relative;
+  z-index: 2;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--color-gold-primary), var(--color-rose-gold));
   color: #12090F;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  font-size: 1.05rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), 0 0 12px rgba(212, 175, 55, 0.5);
   border: 3px solid #FFFFFF;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.comparison-container:hover .handle-button,
+.comparison-container.active-dragging .handle-button {
+  transform: scale(1.1);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.7), 0 0 18px rgba(212, 175, 55, 0.8);
 }
 
 .comparison-badge {
   position: absolute;
-  top: 1.25rem;
-  padding: 0.4rem 1rem;
+  top: 1.15rem;
+  padding: 0.35rem 0.95rem;
   border-radius: var(--radius-full);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   z-index: 5;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
 .badge-before {
-  left: 1.25rem;
-  background: rgba(0, 0, 0, 0.65);
+  left: 1.15rem;
+  background: rgba(14, 10, 13, 0.75);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .badge-after {
-  right: 1.25rem;
-  background: rgba(212, 175, 55, 0.85);
+  right: 1.15rem;
+  background: rgba(212, 175, 55, 0.9);
   color: #12090F;
-  border: 1px solid #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.comparison-hint {
+  position: absolute;
+  bottom: 1.15rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.35rem 0.9rem;
+  background: rgba(15, 12, 16, 0.75);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-gold-light);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  z-index: 5;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .transformation-features {

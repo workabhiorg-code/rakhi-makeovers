@@ -2,5 +2,11 @@
   "username": "admin",
   "salt": "8f92a3c7b4e1d6502938475610293847",
   "passwordHash": "413d666ed8cbf6c869e1d5c53024f9eb0bc6e11e1a234bd62a728fb4027fec275964400b4b53fad802f63e08c633fd87f2718fe7f629b0243d062439d463e778",
-  "sessions": []
+  "sessions": [
+    {
+      "token": "2598c1c135a075bc489de45579f1268f56314fc556af0501436220498e3b5199",
+      "createdAt": 1789548913394,
+      "expiresAt": 1790153713394
+    }
+  ]
 }

@@ -2,6 +2,5 @@
 # Documentation: https://developers.cloudflare.com/pages/configuration/redirects/
 
 # Standard Clean Redirection
-/index.html    /    301
-
-# Fallback / SPA routing (if applicable, otherwise default to 404)
+/index.html    /            301
+/admin         /admin.html  200

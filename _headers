@@ -44,3 +44,16 @@
 # HTML Pages - Always Fresh / Fast Revalidation
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+# Dynamic API Routes - Serverless Functions with CORS
+/api/*
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Headers: Content-Type, Authorization
+  Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+  Cache-Control: no-store, no-cache, must-revalidate
+
+# JSON Data Static Fallbacks
+/data/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Content-Type: application/json; charset=utf-8
+  Access-Control-Allow-Origin: *
