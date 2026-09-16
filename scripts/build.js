@@ -2,23 +2,54 @@ const fs = require('fs');
 const path = require('path');
 
 console.log('======================================================');
-console.log('✨ RAKHI MAKEOVERS - CLOUDFLARE PAGES BUILD OPTIMIZER');
+console.log('✨ RAKHI MAKEOVERS - CLOUDFLARE BUILD PIPELINE');
 console.log('======================================================\n');
 
-// Clean node_modules during Cloudflare Pages CI build so large binaries (like workerd) are not scanned as static assets
-const isCloudflare = process.env.CF_PAGES || process.env.CI || process.env.CLOUDFLARE_PAGES;
+const rootDir = path.join(__dirname, '..');
+const distDir = path.join(rootDir, 'dist');
 
-if (isCloudflare) {
-  const nodeModulesDir = path.join(__dirname, '..', 'node_modules');
-  if (fs.existsSync(nodeModulesDir)) {
-    console.log('🧹 Cleaning node_modules before Cloudflare asset packaging...');
-    try {
-      fs.rmSync(nodeModulesDir, { recursive: true, force: true });
-      console.log('✅ node_modules removed from static assets list.');
-    } catch (err) {
-      console.warn('⚠️ Could not remove node_modules:', err.message);
+// Recreate dist directory
+if (fs.existsSync(distDir)) {
+  fs.rmSync(distDir, { recursive: true, force: true });
+}
+fs.mkdirSync(distDir, { recursive: true });
+
+// Copy all production website files into dist/
+const itemsToCopy = [
+  'index.html',
+  'admin.html',
+  '404.html',
+  'favicon.ico',
+  'favicon.svg',
+  'apple-touch-icon.png',
+  'robots.txt',
+  'sitemap.xml',
+  'site.webmanifest',
+  '_headers',
+  '_redirects',
+  'assets',
+  'data'
+];
+
+function copyRecursive(src, dest) {
+  const stat = fs.statSync(src);
+  if (stat.isDirectory()) {
+    fs.mkdirSync(dest, { recursive: true });
+    for (const file of fs.readdirSync(src)) {
+      copyRecursive(path.join(src, file), path.join(dest, file));
     }
+  } else {
+    fs.copyFileSync(src, dest);
   }
 }
 
-console.log('🚀 Build optimization complete. Ready for Cloudflare Pages deployment!\n');
+for (const item of itemsToCopy) {
+  const srcPath = path.join(rootDir, item);
+  const destPath = path.join(distDir, item);
+  if (fs.existsSync(srcPath)) {
+    copyRecursive(srcPath, destPath);
+    console.log(` ✓ Packaged ${item} -> dist/${item}`);
+  }
+}
+
+console.log('\n🎉 Build successful! dist/ is clean (no node_modules) and ready for Cloudflare deployment!\n');

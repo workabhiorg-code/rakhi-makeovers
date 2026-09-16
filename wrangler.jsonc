@@ -6,23 +6,6 @@
     "enabled": true
   },
   "assets": {
-    "directory": ".",
-    "exclude": [
-      "node_modules",
-      "node_modules/**",
-      "scripts",
-      "scripts/**",
-      ".git",
-      ".git/**",
-      ".github",
-      ".github/**",
-      "package.json",
-      "package-lock.json",
-      ".cfignore",
-      ".wranglerignore",
-      "wrangler.jsonc",
-      "wrangler.toml",
-      "*.log"
-    ]
+    "directory": "dist"
   }
 }
