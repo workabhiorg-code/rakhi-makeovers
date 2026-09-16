@@ -7,6 +7,7 @@
     "dev": "node scripts/serve.js",
     "start": "node scripts/serve.js",
     "serve": "node scripts/serve.js",
+    "pages:dev": "npx wrangler pages dev . --kv=RAKHI_KV",
     "optimize": "node scripts/optimize-images.js",
     "audit": "node scripts/validate.js"
   },
