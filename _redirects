@@ -1,16 +1,6 @@
 # Cloudflare Pages / Workers Redirects
 # Documentation: https://developers.cloudflare.com/pages/configuration/redirects/
 
-# Admin Studio Panel Routes (Clean Rewrites to admin.html - No Directory 307 Loops)
-/admin            /admin.html    200
-/admin/           /admin.html    200
-/login            /admin.html    200
-/login/           /admin.html    200
-/login/Rakhi      /admin.html    200
-/login/rakhi      /admin.html    200
-/login/Rakhi/     /admin.html    200
-/login/rakhi/     /admin.html    200
-
 # Standard Clean Redirection
 /index.html       /              301
 
