@@ -1,4 +1,6 @@
 // Cloudflare Pages Function: /api/reviews and /api/reviews/:id
+import { SECURE_CORS_HEADERS, verifyAuth } from '../_auth.js';
+
 const DEFAULT_REVIEWS = [
   {
     id: "review-1",
@@ -79,13 +81,6 @@ const DEFAULT_REVIEWS = [
   }
 ];
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Content-Type': 'application/json'
-};
-
 async function getReviews(env) {
   if (env && env.RAKHI_KV) {
     const data = await env.RAKHI_KV.get('reviews_data', { type: 'json' });
@@ -105,29 +100,33 @@ export async function onRequest(context) {
   const method = request.method;
 
   if (method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: SECURE_CORS_HEADERS });
   }
 
   const url = new URL(request.url);
   const pathParts = url.pathname.split('/').filter(Boolean);
   const reviewId = pathParts[2] || null;
 
+  // Public GET route
   if (method === 'GET') {
     const reviews = await getReviews(env);
     return new Response(JSON.stringify(reviews), {
       headers: {
-        ...corsHeaders,
+        ...SECURE_CORS_HEADERS,
         'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
       },
       status: 200
     });
   }
 
-  // Auth check for mutations
-  const authHeader = request.headers.get('Authorization') || '';
-  if (!authHeader.replace(/^Bearer\s+/i, '').trim()) {
-    return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), {
-      headers: corsHeaders,
+  // Enforce session validation on all mutations (POST, PUT, DELETE)
+  const auth = await verifyAuth(request, env);
+  if (!auth.valid) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: auth.message || 'Unauthorized'
+    }), {
+      headers: SECURE_CORS_HEADERS,
       status: 401
     });
   }
@@ -137,17 +136,23 @@ export async function onRequest(context) {
   if (method === 'POST') {
     try {
       const newReview = await request.json();
+      if (!newReview || !newReview.authorName || !newReview.reviewText) {
+        return new Response(JSON.stringify({ success: false, message: 'Author name and review text are required' }), {
+          headers: SECURE_CORS_HEADERS,
+          status: 400
+        });
+      }
       newReview.id = newReview.id || 'review-' + Date.now();
       newReview.order = reviews.length + 1;
       reviews.push(newReview);
       await saveReviews(env, reviews);
       return new Response(JSON.stringify({ success: true, review: newReview }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 201
       });
     } catch (err) {
       return new Response(JSON.stringify({ success: false, message: 'Invalid payload' }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 400
       });
     }
@@ -159,19 +164,19 @@ export async function onRequest(context) {
       const index = reviews.findIndex(r => r.id === reviewId);
       if (index === -1) {
         return new Response(JSON.stringify({ success: false, message: 'Review not found' }), {
-          headers: corsHeaders,
+          headers: SECURE_CORS_HEADERS,
           status: 404
         });
       }
       reviews[index] = { ...reviews[index], ...updateData, id: reviewId };
       await saveReviews(env, reviews);
       return new Response(JSON.stringify({ success: true, review: reviews[index] }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 200
       });
     } catch (err) {
       return new Response(JSON.stringify({ success: false, message: 'Invalid payload' }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 400
       });
     }
@@ -181,13 +186,13 @@ export async function onRequest(context) {
     reviews = reviews.filter(r => r.id !== reviewId);
     await saveReviews(env, reviews);
     return new Response(JSON.stringify({ success: true, message: 'Review deleted' }), {
-      headers: corsHeaders,
+      headers: SECURE_CORS_HEADERS,
       status: 200
     });
   }
 
   return new Response(JSON.stringify({ success: false, message: 'Method Not Allowed' }), {
-    headers: corsHeaders,
+    headers: SECURE_CORS_HEADERS,
     status: 405
   });
 }

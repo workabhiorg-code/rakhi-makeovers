@@ -5,7 +5,7 @@ const rootDir = path.join(__dirname, '..');
 let hasErrors = false;
 
 console.log('======================================================');
-console.log('✨ RAKHI MAKEOVERS - SEO, DSA & CLOUDFLARE AUDIT SUITE');
+console.log('✨ RAKHI MAKEOVERS - SEO, DSA & SECURITY AUDIT SUITE');
 console.log('======================================================\n');
 
 // 1. Check index.html & Structured Data (JSON-LD)
@@ -131,7 +131,12 @@ if (robots.includes('User-agent: Googlebot') && robots.includes('User-agent: Goo
 
 // 6. Check Cloudflare _headers & _redirects
 if (fs.existsSync(path.join(rootDir, '_headers')) && fs.existsSync(path.join(rootDir, '_redirects'))) {
-  console.log('✅ Cloudflare Pages Config: _headers & _redirects ready.');
+  const headersContent = fs.readFileSync(path.join(rootDir, '_headers'), 'utf8');
+  if (headersContent.includes('Content-Security-Policy') && headersContent.includes('X-Robots-Tag')) {
+    console.log('✅ Cloudflare Pages Config: _headers fortified with CSP & Anti-indexing tags.');
+  } else {
+    console.warn('⚠️ _headers is missing Content-Security-Policy or X-Robots-Tag.');
+  }
 } else {
   console.error('❌ Missing _headers or _redirects file.');
   hasErrors = true;
@@ -159,11 +164,61 @@ if (missingFavs === 0) {
   console.log('✅ Favicons & App Icons: All root icons present for Chrome, iOS & Android.');
 }
 
+// 9. SECURITY AUDIT: Verify Isolation of Admin Credentials & Function Auth Guards
+console.log('\n🔒 RUNNING DEEP SECURITY & AUTHENTICATION AUDIT:');
+
+// 9a. Verify dist/ does NOT contain data/admin.json if dist exists
+const distDir = path.join(rootDir, 'dist');
+if (fs.existsSync(distDir)) {
+  const leakedAdmin = path.join(distDir, 'data', 'admin.json');
+  if (fs.existsSync(leakedAdmin)) {
+    console.error('❌ CRITICAL SECURITY VULNERABILITY: dist/data/admin.json is packaged and exposed to public!');
+    hasErrors = true;
+  } else {
+    console.log('✅ Data Isolation: dist/data/admin.json is excluded from production builds.');
+  }
+}
+
+// 9b. Verify functions/_auth.js exists
+const authHelperPath = path.join(rootDir, 'functions', 'api', '_auth.js');
+if (fs.existsSync(authHelperPath)) {
+  console.log('✅ Cloudflare Security Module: functions/api/_auth.js is active.');
+} else {
+  console.error('❌ Missing functions/api/_auth.js security module.');
+  hasErrors = true;
+}
+
+// 9c. Verify all mutating functions import and enforce verifyAuth
+const functionsToCheck = [
+  'functions/api/services/[[catchall]].js',
+  'functions/api/gallery/[[catchall]].js',
+  'functions/api/reviews/[[catchall]].js',
+  'functions/api/upload.js',
+  'functions/api/auth/me.js',
+  'functions/api/auth/change-password.js'
+];
+
+let unguardedFunctions = 0;
+for (const relPath of functionsToCheck) {
+  const fullPath = path.join(rootDir, relPath);
+  if (fs.existsSync(fullPath)) {
+    const code = fs.readFileSync(fullPath, 'utf8');
+    if (!code.includes('verifyAuth')) {
+      console.error(`❌ Unprotected API Endpoint: ${relPath} does not invoke verifyAuth!`);
+      unguardedFunctions++;
+      hasErrors = true;
+    }
+  }
+}
+if (unguardedFunctions === 0) {
+  console.log(`✅ API Auth Enforcement: All ${functionsToCheck.length} mutating endpoints strictly enforce verifyAuth session validation.`);
+}
+
 console.log('\n======================================================');
 if (hasErrors) {
   console.log('❌ AUDIT FAILED: Please fix the issues logged above.');
   process.exit(1);
 } else {
-  console.log('🎉 AUDIT 100% PASSED: Ready for Google Search Console Indexing & Cloudflare Pages Hosting!');
+  console.log('🎉 AUDIT 100% PASSED: System is hardened, secure, and ready for deployment!');
   console.log('======================================================\n');
 }

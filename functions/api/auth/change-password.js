@@ -1,19 +1,17 @@
 // Cloudflare Pages Function: POST /api/auth/change-password
+import { SECURE_CORS_HEADERS, verifyAuth } from '../_auth.js';
+
 export async function onRequestPost(context) {
   const { request, env } = context;
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
 
-  const authHeader = request.headers.get('Authorization') || '';
-  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
-
-  if (!token) {
-    return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), {
-      headers: corsHeaders,
+  // 1. Verify Active Session
+  const auth = await verifyAuth(request, env);
+  if (!auth.valid) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: auth.message || 'Unauthorized'
+    }), {
+      headers: SECURE_CORS_HEADERS,
       status: 401
     });
   }
@@ -22,13 +20,17 @@ export async function onRequestPost(context) {
     const body = await request.json();
     const { currentPassword, newPassword } = body;
 
-    if (!newPassword || newPassword.length < 6) {
-      return new Response(JSON.stringify({ success: false, message: 'New password must be at least 6 characters' }), {
-        headers: corsHeaders,
+    if (!newPassword || newPassword.length < 8) {
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'New password must be at least 8 characters long'
+      }), {
+        headers: SECURE_CORS_HEADERS,
         status: 400
       });
     }
 
+    // Default admin credentials fallback
     let adminConfig = {
       username: 'admin',
       passwordHash: '413d666ed8cbf6c869e1d5c53024f9eb0bc6e11e1a234bd62a728fb4027fec275964400b4b53fad802f63e08c633fd87f2718fe7f629b0243d062439d463e778',
@@ -62,13 +64,16 @@ export async function onRequestPost(context) {
       .join('');
 
     if (currentDerivedHex !== adminConfig.passwordHash) {
-      return new Response(JSON.stringify({ success: false, message: 'Current password is incorrect' }), {
-        headers: corsHeaders,
+      return new Response(JSON.stringify({
+        success: false,
+        message: 'Current password is incorrect'
+      }), {
+        headers: SECURE_CORS_HEADERS,
         status: 400
       });
     }
 
-    // Generate new salt and hash
+    // Generate new cryptographic salt (16 bytes = 32 hex chars) and hash
     const newSaltBytes = crypto.getRandomValues(new Uint8Array(16));
     const newSaltHex = Array.from(newSaltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
@@ -97,24 +102,24 @@ export async function onRequestPost(context) {
       await env.RAKHI_KV.put('admin_config', JSON.stringify(adminConfig));
     }
 
-    return new Response(JSON.stringify({ success: true, message: 'Password updated successfully' }), {
-      headers: corsHeaders,
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Password updated successfully'
+    }), {
+      headers: SECURE_CORS_HEADERS,
       status: 200
     });
   } catch (err) {
-    return new Response(JSON.stringify({ success: false, message: 'Failed to update password: ' + err.message }), {
-      headers: corsHeaders,
+    return new Response(JSON.stringify({
+      success: false,
+      message: 'Failed to update password: ' + err.message
+    }), {
+      headers: SECURE_CORS_HEADERS,
       status: 500
     });
   }
 }
 
 export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    }
-  });
+  return new Response(null, { headers: SECURE_CORS_HEADERS });
 }

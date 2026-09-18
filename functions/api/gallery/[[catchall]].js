@@ -1,4 +1,6 @@
 // Cloudflare Pages Function: /api/gallery and /api/gallery/:id
+import { SECURE_CORS_HEADERS, verifyAuth } from '../_auth.js';
+
 const DEFAULT_GALLERY = [
   {
     id: "gallery-1",
@@ -62,13 +64,6 @@ const DEFAULT_GALLERY = [
   }
 ];
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Content-Type': 'application/json'
-};
-
 async function getGallery(env) {
   if (env && env.RAKHI_KV) {
     const data = await env.RAKHI_KV.get('gallery_data', { type: 'json' });
@@ -88,29 +83,33 @@ export async function onRequest(context) {
   const method = request.method;
 
   if (method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { headers: SECURE_CORS_HEADERS });
   }
 
   const url = new URL(request.url);
   const pathParts = url.pathname.split('/').filter(Boolean);
   const galleryId = pathParts[2] || null;
 
+  // Public GET route
   if (method === 'GET') {
     const gallery = await getGallery(env);
     return new Response(JSON.stringify(gallery), {
       headers: {
-        ...corsHeaders,
+        ...SECURE_CORS_HEADERS,
         'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
       },
       status: 200
     });
   }
 
-  // Auth check for mutations
-  const authHeader = request.headers.get('Authorization') || '';
-  if (!authHeader.replace(/^Bearer\s+/i, '').trim()) {
-    return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), {
-      headers: corsHeaders,
+  // Enforce session validation on all mutations (POST, PUT, DELETE)
+  const auth = await verifyAuth(request, env);
+  if (!auth.valid) {
+    return new Response(JSON.stringify({
+      success: false,
+      message: auth.message || 'Unauthorized'
+    }), {
+      headers: SECURE_CORS_HEADERS,
       status: 401
     });
   }
@@ -120,17 +119,23 @@ export async function onRequest(context) {
   if (method === 'POST') {
     try {
       const newItem = await request.json();
+      if (!newItem || !newItem.title || !newItem.image) {
+        return new Response(JSON.stringify({ success: false, message: 'Title and image are required' }), {
+          headers: SECURE_CORS_HEADERS,
+          status: 400
+        });
+      }
       newItem.id = newItem.id || 'gallery-' + Date.now();
       newItem.order = gallery.length + 1;
       gallery.push(newItem);
       await saveGallery(env, gallery);
       return new Response(JSON.stringify({ success: true, item: newItem }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 201
       });
     } catch (err) {
       return new Response(JSON.stringify({ success: false, message: 'Invalid payload' }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 400
       });
     }
@@ -142,19 +147,19 @@ export async function onRequest(context) {
       const index = gallery.findIndex(g => g.id === galleryId);
       if (index === -1) {
         return new Response(JSON.stringify({ success: false, message: 'Item not found' }), {
-          headers: corsHeaders,
+          headers: SECURE_CORS_HEADERS,
           status: 404
         });
       }
       gallery[index] = { ...gallery[index], ...updateData, id: galleryId };
       await saveGallery(env, gallery);
       return new Response(JSON.stringify({ success: true, item: gallery[index] }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 200
       });
     } catch (err) {
       return new Response(JSON.stringify({ success: false, message: 'Invalid payload' }), {
-        headers: corsHeaders,
+        headers: SECURE_CORS_HEADERS,
         status: 400
       });
     }
@@ -164,13 +169,13 @@ export async function onRequest(context) {
     gallery = gallery.filter(g => g.id !== galleryId);
     await saveGallery(env, gallery);
     return new Response(JSON.stringify({ success: true, message: 'Item deleted' }), {
-      headers: corsHeaders,
+      headers: SECURE_CORS_HEADERS,
       status: 200
     });
   }
 
   return new Response(JSON.stringify({ success: false, message: 'Method Not Allowed' }), {
-    headers: corsHeaders,
+    headers: SECURE_CORS_HEADERS,
     status: 405
   });
 }

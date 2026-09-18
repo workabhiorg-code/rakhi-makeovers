@@ -138,7 +138,7 @@ function showAdminDashboard() {
    2. NAVIGATION & TABS
    ========================================================================== */
 function initSidebarAndTabs() {
-  const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+  const navItems = document.querySelectorAll('.sidebar-nav .nav-item, .mobile-admin-tabs .mobile-tab-btn');
   const sidebarToggle = document.getElementById('sidebar-toggle');
   const sidebar = document.getElementById('admin-sidebar');
 
@@ -160,7 +160,7 @@ function initSidebarAndTabs() {
 }
 
 function switchTab(tabId) {
-  document.querySelectorAll('.sidebar-nav .nav-item').forEach(btn => {
+  document.querySelectorAll('.sidebar-nav .nav-item, .mobile-admin-tabs .mobile-tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-tab') === tabId);
   });
 
@@ -650,6 +650,13 @@ function initFormListeners() {
       const saveBtn = document.getElementById('btn-save-password');
 
       statusMsg.style.display = 'none';
+
+      if (newPassword.length < 8) {
+        statusMsg.className = 'alert-banner alert-error';
+        statusMsg.textContent = 'New password must be at least 8 characters long.';
+        statusMsg.style.display = 'block';
+        return;
+      }
 
       if (newPassword !== confirmPassword) {
         statusMsg.className = 'alert-banner alert-error';

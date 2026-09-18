@@ -1,24 +1,23 @@
 // Cloudflare Pages Function: POST /api/auth/logout
-export async function onRequestPost(context) {
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
+import { SECURE_CORS_HEADERS, extractToken, revokeSession } from '../_auth.js';
 
-  return new Response(JSON.stringify({ success: true, message: 'Logged out successfully' }), {
-    headers: corsHeaders,
+export async function onRequestPost(context) {
+  const { request, env } = context;
+  const token = extractToken(request);
+
+  if (token) {
+    await revokeSession(token, env);
+  }
+
+  return new Response(JSON.stringify({
+    success: true,
+    message: 'Logged out and session revoked successfully'
+  }), {
+    headers: SECURE_CORS_HEADERS,
     status: 200
   });
 }
 
 export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
-    }
-  });
+  return new Response(null, { headers: SECURE_CORS_HEADERS });
 }

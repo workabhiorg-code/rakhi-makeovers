@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initNavbar();
   initScrollAnimations();
   initBeforeAfterSlider();
+  initServicesCarousel();
   initServiceFilters();
   initGalleryFilterAndLightbox();
   initTestimonialCarousel();
@@ -296,8 +297,202 @@ function initBeforeAfterSlider() {
 }
 
 /* ==========================================================================
-   4. SERVICES FILTERING (Event Delegation & Idempotent)
+   4. BESPOKE BRIDAL SERVICES AUTO-SLIDER & FILTERING (3.5-Second Cycle)
    ========================================================================== */
+let servicesCarouselState = {
+  currentIndex: 0,
+  autoSlideTimer: null,
+  isPaused: false
+};
+
+function initServicesCarousel() {
+  const track = document.getElementById('services-track');
+  const wrapper = document.querySelector('.services-slider-wrapper');
+  const prevBtn = document.querySelector('.services-prev-btn');
+  const nextBtn = document.querySelector('.services-next-btn');
+  const dotsContainer = document.getElementById('services-dots');
+  
+  if (!track || !wrapper) return;
+
+  function getEligibleCards() {
+    return Array.from(track.querySelectorAll('.service-card')).filter(card => {
+      return card.style.display !== 'none';
+    });
+  }
+
+  let cards = getEligibleCards();
+  if (cards.length === 0) {
+    cards = Array.from(track.querySelectorAll('.service-card'));
+  }
+
+  function getVisibleCards() {
+    if (window.innerWidth <= 768) return 1;
+    if (window.innerWidth <= 1024) return 2;
+    return 3;
+  }
+
+  function setupDots() {
+    if (!dotsContainer) return;
+    dotsContainer.innerHTML = '';
+    const visibleCards = getVisibleCards();
+    const maxSteps = Math.max(1, cards.length - visibleCards + 1);
+
+    for (let idx = 0; idx < maxSteps; idx++) {
+      const dot = document.createElement('button');
+      dot.className = `slider-dot ${idx === servicesCarouselState.currentIndex ? 'active' : ''}`;
+      dot.setAttribute('aria-label', `View service slide ${idx + 1}`);
+      dot.addEventListener('click', () => {
+        goToSlide(idx);
+        restartTimer();
+      });
+      dotsContainer.appendChild(dot);
+    }
+  }
+
+  function updateSliderPosition() {
+    cards = getEligibleCards();
+    if (cards.length === 0) {
+      cards = Array.from(track.querySelectorAll('.service-card'));
+    }
+
+    const visibleCards = getVisibleCards();
+    const maxIndex = Math.max(0, cards.length - visibleCards);
+
+    if (servicesCarouselState.currentIndex > maxIndex) {
+      servicesCarouselState.currentIndex = 0;
+    } else if (servicesCarouselState.currentIndex < 0) {
+      servicesCarouselState.currentIndex = maxIndex;
+    }
+
+    if (cards.length === 0 || !cards[0]) {
+      track.style.transform = 'translateX(0px)';
+      return;
+    }
+
+    const cardWidth = cards[0].getBoundingClientRect().width;
+    const gap = parseFloat(getComputedStyle(track).gap) || 32;
+    const offset = servicesCarouselState.currentIndex * (cardWidth + gap);
+
+    track.style.transform = `translateX(-${offset}px)`;
+
+    const dots = dotsContainer?.querySelectorAll('.slider-dot') || [];
+    dots.forEach((dot, idx) => {
+      dot.classList.toggle('active', idx === servicesCarouselState.currentIndex);
+    });
+  }
+
+  function nextSlide() {
+    cards = getEligibleCards();
+    const visibleCards = getVisibleCards();
+    const maxIndex = Math.max(0, cards.length - visibleCards);
+    if (servicesCarouselState.currentIndex >= maxIndex) {
+      servicesCarouselState.currentIndex = 0;
+    } else {
+      servicesCarouselState.currentIndex++;
+    }
+    updateSliderPosition();
+  }
+
+  function prevSlide() {
+    cards = getEligibleCards();
+    const visibleCards = getVisibleCards();
+    const maxIndex = Math.max(0, cards.length - visibleCards);
+    if (servicesCarouselState.currentIndex <= 0) {
+      servicesCarouselState.currentIndex = maxIndex;
+    } else {
+      servicesCarouselState.currentIndex--;
+    }
+    updateSliderPosition();
+  }
+
+  function goToSlide(index) {
+    servicesCarouselState.currentIndex = index;
+    updateSliderPosition();
+  }
+
+  function startAutoSlide() {
+    stopAutoSlide();
+    servicesCarouselState.autoSlideTimer = setInterval(() => {
+      if (!servicesCarouselState.isPaused) {
+        nextSlide();
+      }
+    }, 3500);
+  }
+
+  function stopAutoSlide() {
+    if (servicesCarouselState.autoSlideTimer) {
+      clearInterval(servicesCarouselState.autoSlideTimer);
+      servicesCarouselState.autoSlideTimer = null;
+    }
+  }
+
+  function restartTimer() {
+    stopAutoSlide();
+    startAutoSlide();
+  }
+
+  setupDots();
+  updateSliderPosition();
+
+  // Prev / Next button listeners (only bind once)
+  if (prevBtn && !prevBtn.dataset.carouselBound) {
+    prevBtn.dataset.carouselBound = 'true';
+    prevBtn.addEventListener('click', () => {
+      prevSlide();
+      restartTimer();
+    });
+  }
+
+  if (nextBtn && !nextBtn.dataset.carouselBound) {
+    nextBtn.dataset.carouselBound = 'true';
+    nextBtn.addEventListener('click', () => {
+      nextSlide();
+      restartTimer();
+    });
+  }
+
+  // Hover pause / resume (only bind once)
+  if (!wrapper.dataset.carouselBound) {
+    wrapper.dataset.carouselBound = 'true';
+    wrapper.addEventListener('mouseenter', () => { servicesCarouselState.isPaused = true; });
+    wrapper.addEventListener('mouseleave', () => { servicesCarouselState.isPaused = false; });
+
+    // Touch Swipe gestures for Mobile
+    let startX = 0;
+    let isSwiping = false;
+
+    wrapper.addEventListener('touchstart', (e) => {
+      servicesCarouselState.isPaused = true;
+      startX = e.touches[0].clientX;
+      isSwiping = true;
+    }, { passive: true });
+
+    wrapper.addEventListener('touchend', (e) => {
+      if (!isSwiping) return;
+      isSwiping = false;
+      servicesCarouselState.isPaused = false;
+      const endX = e.changedTouches[0].clientX;
+      const diff = startX - endX;
+      if (Math.abs(diff) > 40) {
+        if (diff > 0) {
+          nextSlide();
+        } else {
+          prevSlide();
+        }
+        restartTimer();
+      }
+    });
+
+    // Debounced Resize handler
+    window.addEventListener('resize', debounce(() => {
+      setupDots();
+      updateSliderPosition();
+    }, 100));
+  }
+
+  startAutoSlide();
+}
+
 function initServiceFilters() {
   const filterContainer = document.querySelector('.services-filter-tabs');
   if (!filterContainer || filterContainer.dataset.filterBound) return;
@@ -321,20 +516,15 @@ function applyServiceFilter(filterVal) {
     const category = card.getAttribute('data-category');
     if (filterVal === 'all' || category === filterVal) {
       card.style.display = 'flex';
-      requestAnimationFrame(() => {
-        card.style.opacity = '1';
-        card.style.transform = 'translateY(0)';
-      });
+      card.style.opacity = '1';
     } else {
+      card.style.display = 'none';
       card.style.opacity = '0';
-      card.style.transform = 'translateY(20px)';
-      setTimeout(() => {
-        if (card.style.opacity === '0') {
-          card.style.display = 'none';
-        }
-      }, 300);
     }
   });
+
+  servicesCarouselState.currentIndex = 0;
+  initServicesCarousel();
 }
 
 /* ==========================================================================
@@ -875,11 +1065,11 @@ async function fetchServicesSync() {
     const services = await res.json();
     if (!Array.isArray(services) || services.length === 0) return;
 
-    const grid = document.querySelector('.services-cards-grid');
-    if (!grid) return;
+    const track = document.getElementById('services-track') || document.querySelector('.services-cards-grid');
+    if (!track) return;
 
-    grid.innerHTML = services.map(s => `
-      <div class="service-card reveal-fade-up active" data-category="${escapeHtml(s.category || 'bridal')}">
+    track.innerHTML = services.map(s => `
+      <div class="service-card" data-category="${escapeHtml(s.category || 'bridal')}">
         <div class="service-card-media">
           <img src="${escapeHtml(s.image || 'assets/images/bridal_traditional.webp')}" alt="${escapeHtml(s.title)}" class="service-card-img" width="400" height="220" loading="lazy" decoding="async">
         </div>
@@ -896,6 +1086,8 @@ async function fetchServicesSync() {
         </div>
       </div>
     `).join('');
+
+    initServicesCarousel();
   } catch (e) {
     // Graceful fallback to initial static HTML
   }

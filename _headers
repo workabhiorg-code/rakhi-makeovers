@@ -9,6 +9,16 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), interest-cohort=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https:; frame-ancestors 'none';
+
+# Admin Dashboard Security & Indexing Protection
+/admin.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store, no-cache, must-revalidate
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store, no-cache, must-revalidate
 
 # Static Assets (Images, WebP, PNG, SVG, Favicons, Fonts) - 1 Year Cache
 /assets/images/*
@@ -51,9 +61,24 @@
   Access-Control-Allow-Headers: Content-Type, Authorization
   Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
   Cache-Control: no-store, no-cache, must-revalidate
+  X-Content-Type-Options: nosniff
 
 # JSON Data Static Fallbacks
-/data/*
+/data/services.json
   Cache-Control: public, max-age=300, stale-while-revalidate=86400
   Content-Type: application/json; charset=utf-8
   Access-Control-Allow-Origin: *
+
+/data/gallery.json
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Content-Type: application/json; charset=utf-8
+  Access-Control-Allow-Origin: *
+
+/data/reviews.json
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+  Content-Type: application/json; charset=utf-8
+  Access-Control-Allow-Origin: *
+
+/data/admin.json
+  Cache-Control: no-store, no-cache, must-revalidate
+  X-Robots-Tag: noindex, nofollow, noarchive

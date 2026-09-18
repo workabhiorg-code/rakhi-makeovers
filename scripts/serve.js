@@ -33,6 +33,69 @@ const MIME_TYPES = {
   '.ttf': 'font/ttf'
 };
 
+// In-Memory Rate Limiting for local preview server
+const loginAttempts = new Map(); // ip -> { count, lockedUntil }
+
+function checkRateLimit(ip) {
+  const record = loginAttempts.get(ip);
+  if (!record) return { allowed: true };
+  const now = Date.now();
+  if (record.lockedUntil && record.lockedUntil > now) {
+    const remainingMins = Math.ceil((record.lockedUntil - now) / 60000);
+    return { allowed: false, message: `Too many failed attempts. Locked for ${remainingMins} minute(s).` };
+  }
+  return { allowed: true };
+}
+
+function recordFailedLogin(ip) {
+  const now = Date.now();
+  const record = loginAttempts.get(ip) || { count: 0, lockedUntil: 0 };
+  record.count += 1;
+  if (record.count >= 5) {
+    record.lockedUntil = now + (15 * 60 * 1000); // 15 mins lock
+    record.count = 0;
+  }
+  loginAttempts.set(ip, record);
+}
+
+function resetLoginAttempts(ip) {
+  loginAttempts.delete(ip);
+}
+
+// Magic byte validation helper
+function validateImageMagicBytes(buffer) {
+  if (!buffer || buffer.length < 12) return { valid: false, format: null, mime: null };
+
+  // PNG: 89 50 4E 47 0D 0A 1A 0A
+  if (
+    buffer[0] === 0x89 && buffer[1] === 0x50 &&
+    buffer[2] === 0x4E && buffer[3] === 0x47 &&
+    buffer[4] === 0x0D && buffer[5] === 0x0A &&
+    buffer[6] === 0x1A && buffer[7] === 0x0A
+  ) {
+    return { valid: true, format: '.png', mime: 'image/png' };
+  }
+
+  // JPEG / JPG: FF D8 FF
+  if (
+    buffer[0] === 0xFF && buffer[1] === 0xD8 && buffer[2] === 0xFF
+  ) {
+    return { valid: true, format: '.jpg', mime: 'image/jpeg' };
+  }
+
+  // WebP: RIFF .... WEBP
+  if (
+    buffer[0] === 0x52 && buffer[1] === 0x49 &&
+    buffer[2] === 0x46 && buffer[3] === 0x47 &&
+    buffer[8] === 0x57 && buffer[9] === 0x45 &&
+    buffer[10] === 0x42 && buffer[11] === 0x50
+  ) {
+    return { valid: true, format: '.webp', mime: 'image/webp' };
+  }
+
+  return { valid: false, format: null, mime: null };
+}
+
 // Helper: Hash password
 function hashPassword(password, salt) {
   return crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
@@ -86,7 +149,9 @@ function sendJSON(res, statusCode, data) {
     'Content-Type': 'application/json; charset=UTF-8',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS'
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY'
   });
   res.end(JSON.stringify(data));
 }
@@ -103,6 +168,8 @@ function parseBody(req) {
 
 // Main HTTP Server
 const server = http.createServer(async (req, res) => {
+  const clientIp = req.socket.remoteAddress || '127.0.0.1';
+
   // CORS Preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
@@ -122,8 +189,14 @@ const server = http.createServer(async (req, res) => {
   // =========================================================================
   if (pathname.startsWith('/api/')) {
 
-    // 1. Auth API
+    // 1. Auth API: Login
     if (pathname === '/api/auth/login' && req.method === 'POST') {
+      const rateLimit = checkRateLimit(clientIp);
+      if (!rateLimit.allowed) {
+        sendJSON(res, 429, { success: false, message: rateLimit.message });
+        return;
+      }
+
       try {
         const bodyBuf = await parseBody(req);
         const { username, password } = JSON.parse(bodyBuf.toString() || '{}');
@@ -137,12 +210,14 @@ const server = http.createServer(async (req, res) => {
 
         const computedHash = hashPassword(password || '', adminData.salt);
         if (username === adminData.username && computedHash === adminData.passwordHash) {
+          resetLoginAttempts(clientIp);
+
           const token = crypto.randomBytes(32).toString('hex');
           const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
 
           if (!adminData.sessions) adminData.sessions = [];
+          adminData.sessions = adminData.sessions.filter(s => s.expiresAt > Date.now());
           adminData.sessions.push({ token, createdAt: Date.now(), expiresAt });
-          // Keep max 20 active sessions
           if (adminData.sessions.length > 20) adminData.sessions = adminData.sessions.slice(-20);
           writeData('admin.json', adminData);
 
@@ -152,6 +227,7 @@ const server = http.createServer(async (req, res) => {
             user: { username: adminData.username }
           });
         } else {
+          recordFailedLogin(clientIp);
           sendJSON(res, 401, { success: false, message: 'Invalid username or password' });
         }
       } catch (err) {
@@ -160,6 +236,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 1. Auth API: Logout
     if (pathname === '/api/auth/logout' && req.method === 'POST') {
       const authHeader = req.headers['authorization'] || '';
       const token = authHeader.replace(/^Bearer\s+/i, '').trim();
@@ -172,6 +249,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 1. Auth API: Me
     if (pathname === '/api/auth/me' && req.method === 'GET') {
       if (!verifyAuth(req)) {
         sendJSON(res, 401, { success: false, message: 'Unauthorized' });
@@ -182,6 +260,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // 1. Auth API: Change Password
     if (pathname === '/api/auth/change-password' && req.method === 'POST') {
       if (!verifyAuth(req)) {
         sendJSON(res, 401, { success: false, message: 'Unauthorized' });
@@ -191,8 +270,8 @@ const server = http.createServer(async (req, res) => {
         const bodyBuf = await parseBody(req);
         const { currentPassword, newPassword } = JSON.parse(bodyBuf.toString() || '{}');
 
-        if (!newPassword || newPassword.length < 6) {
-          sendJSON(res, 400, { success: false, message: 'New password must be at least 6 characters' });
+        if (!newPassword || newPassword.length < 8) {
+          sendJSON(res, 400, { success: false, message: 'New password must be at least 8 characters' });
           return;
         }
 
@@ -238,6 +317,10 @@ const server = http.createServer(async (req, res) => {
         try {
           const bodyBuf = await parseBody(req);
           const newService = JSON.parse(bodyBuf.toString() || '{}');
+          if (!newService.title) {
+            sendJSON(res, 400, { success: false, message: 'Service title is required' });
+            return;
+          }
           newService.id = newService.id || 'service-' + Date.now();
           newService.order = services.length + 1;
           services.push(newService);
@@ -297,6 +380,10 @@ const server = http.createServer(async (req, res) => {
         try {
           const bodyBuf = await parseBody(req);
           const newItem = JSON.parse(bodyBuf.toString() || '{}');
+          if (!newItem.title || !newItem.image) {
+            sendJSON(res, 400, { success: false, message: 'Title and image are required' });
+            return;
+          }
           newItem.id = newItem.id || 'gallery-' + Date.now();
           newItem.order = gallery.length + 1;
           gallery.push(newItem);
@@ -356,6 +443,10 @@ const server = http.createServer(async (req, res) => {
         try {
           const bodyBuf = await parseBody(req);
           const newReview = JSON.parse(bodyBuf.toString() || '{}');
+          if (!newReview.authorName || !newReview.reviewText) {
+            sendJSON(res, 400, { success: false, message: 'Author name and review text required' });
+            return;
+          }
           newReview.id = newReview.id || 'review-' + Date.now();
           newReview.order = reviews.length + 1;
           reviews.push(newReview);
@@ -393,7 +484,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // 5. Image Upload API (Supports Base64 JSON and Multipart Raw Stream)
+    // 5. Image Upload API (with Magic Byte verification and size caps)
     if (pathname === '/api/upload' && req.method === 'POST') {
       if (!verifyAuth(req)) {
         sendJSON(res, 401, { success: false, message: 'Unauthorized' });
@@ -404,7 +495,7 @@ const server = http.createServer(async (req, res) => {
         const contentType = req.headers['content-type'] || '';
         const bodyBuf = await parseBody(req);
 
-        let fileBuffer, ext = '.webp';
+        let fileBuffer;
 
         if (contentType.includes('application/json')) {
           const payload = JSON.parse(bodyBuf.toString() || '{}');
@@ -412,16 +503,9 @@ const server = http.createServer(async (req, res) => {
             sendJSON(res, 400, { success: false, message: 'Missing base64 data' });
             return;
           }
-          // e.g. data:image/png;base64,....
           const match = payload.data.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
-          if (match) {
-            ext = '.' + (match[1] === 'jpeg' ? 'jpg' : match[1]);
-            fileBuffer = Buffer.from(match[2], 'base64');
-          } else {
-            fileBuffer = Buffer.from(payload.data, 'base64');
-          }
+          fileBuffer = Buffer.from(match ? match[2] : payload.data, 'base64');
         } else if (contentType.includes('multipart/form-data')) {
-          // Parse boundary
           const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
           const boundary = boundaryMatch ? (boundaryMatch[1] || boundaryMatch[2]) : null;
           if (!boundary) {
@@ -433,10 +517,6 @@ const server = http.createServer(async (req, res) => {
           const parts = rawStr.split('--' + boundary);
           for (const part of parts) {
             if (part.includes('filename="')) {
-              const filenameMatch = part.match(/filename="([^"]+)"/);
-              if (filenameMatch) {
-                ext = path.extname(filenameMatch[1]).toLowerCase() || '.webp';
-              }
               const headerEnd = part.indexOf('\r\n\r\n');
               if (headerEnd !== -1) {
                 const fileBinary = part.substring(headerEnd + 4, part.lastIndexOf('\r\n'));
@@ -446,7 +526,6 @@ const server = http.createServer(async (req, res) => {
             }
           }
         } else {
-          // Direct binary upload
           fileBuffer = bodyBuf;
         }
 
@@ -455,7 +534,19 @@ const server = http.createServer(async (req, res) => {
           return;
         }
 
-        const safeFilename = `upload_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${ext}`;
+        if (fileBuffer.length > 5 * 1024 * 1024) {
+          sendJSON(res, 413, { success: false, message: 'File size exceeds maximum 5 MB limit' });
+          return;
+        }
+
+        // Validate image magic bytes
+        const magic = validateImageMagicBytes(fileBuffer);
+        if (!magic.valid) {
+          sendJSON(res, 400, { success: false, message: 'Invalid file content. Only WebP, JPEG, and PNG are allowed.' });
+          return;
+        }
+
+        const safeFilename = `upload_${Date.now()}_${crypto.randomBytes(4).toString('hex')}${magic.format}`;
         const savePath = path.join(UPLOADS_DIR, safeFilename);
         fs.writeFileSync(savePath, fileBuffer);
 
@@ -473,15 +564,26 @@ const server = http.createServer(async (req, res) => {
   }
 
   // =========================================================================
-  // STATIC FILE SERVING
+  // STATIC FILE SERVING & SENSITIVE FILE PROTECTION
   // =========================================================================
   let reqPath = decodeURI(pathname);
+
+  // 🛡️ SECURITY SHIELD: Explicitly block access to admin.json or internal config
+  if (reqPath.toLowerCase().includes('admin.json') || reqPath.toLowerCase().startsWith('/data/admin.json')) {
+    res.writeHead(403, {
+      'Content-Type': 'application/json',
+      'X-Content-Type-Options': 'nosniff'
+    });
+    res.end(JSON.stringify({ error: '403 Forbidden: Direct access to admin configuration is disallowed' }));
+    return;
+  }
+
   if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
   if (reqPath === '/admin') reqPath = '/admin.html';
 
   let filePath = path.join(ROOT, reqPath);
 
-  // Security: prevent traversal outside ROOT
+  // Security: prevent path traversal outside ROOT
   if (!filePath.startsWith(ROOT)) {
     res.writeHead(403, { 'Content-Type': 'text/plain' });
     res.end('403 Forbidden');
@@ -518,7 +620,9 @@ const server = http.createServer(async (req, res) => {
       }
       res.writeHead(200, {
         'Content-Type': contentType,
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'X-Content-Type-Options': 'nosniff',
+        'X-Frame-Options': 'SAMEORIGIN'
       });
       res.end(content);
     });

@@ -61,7 +61,8 @@
         </button>
 
         <div class="login-footer-hint">
-          <span>Protected by Cloudflare Edge &amp; End-to-End Encryption</span>
+          <div>Protected by Cloudflare Edge &amp; End-to-End Encryption</div>
+          <div class="login-developer-credit">Engineered by <strong>Webverse Software Solutions</strong></div>
         </div>
       </form>
     </div>
@@ -106,6 +107,30 @@
       </div>
     </header>
 
+    <!-- Mobile Quick Navigation Strip (Phone Only) -->
+    <nav class="mobile-admin-tabs" aria-label="Mobile Navigation Tabs">
+      <button class="mobile-tab-btn active" data-tab="tab-dashboard">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Dashboard</span>
+      </button>
+      <button class="mobile-tab-btn" data-tab="tab-services">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        <span>Services</span>
+      </button>
+      <button class="mobile-tab-btn" data-tab="tab-gallery">
+        <i class="fa-solid fa-images"></i>
+        <span>Lookbook</span>
+      </button>
+      <button class="mobile-tab-btn" data-tab="tab-reviews">
+        <i class="fa-solid fa-star"></i>
+        <span>Reviews</span>
+      </button>
+      <button class="mobile-tab-btn" data-tab="tab-settings">
+        <i class="fa-solid fa-gear"></i>
+        <span>Settings</span>
+      </button>
+    </nav>
+
     <!-- Main Workspace -->
     <div class="admin-workspace">
       
@@ -135,11 +160,11 @@
         </nav>
 
         <div class="sidebar-footer">
-          <div class="cf-hosting-badge">
-            <i class="fa-solid fa-cloud"></i>
-            <div>
-              <strong>Cloudflare Pages</strong>
-              <small>100% Free Tier Setup</small>
+          <div class="developer-badge">
+            <div class="dev-badge-icon"><i class="fa-solid fa-code"></i></div>
+            <div class="dev-badge-info">
+              <span class="dev-badge-title">Webverse</span>
+              <span class="dev-badge-sub">Software Solutions</span>
             </div>
           </div>
         </div>
@@ -192,10 +217,10 @@
             </div>
 
             <div class="stat-card glass-panel">
-              <div class="stat-icon emerald"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+              <div class="stat-icon emerald"><i class="fa-solid fa-shield-halved"></i></div>
               <div class="stat-data">
-                <span class="stat-number">Free</span>
-                <span class="stat-label">Cloudflare Hosting</span>
+                <span class="stat-number">Active</span>
+                <span class="stat-label">Security &amp; Cloud Edge</span>
               </div>
             </div>
           </div>
@@ -217,13 +242,31 @@
               </div>
             </div>
 
-            <div class="dashboard-card glass-panel">
-              <h3 class="card-heading"><i class="fa-solid fa-circle-info text-gold"></i> Cloudflare Free Tier Guidelines</h3>
-              <ul class="info-checklist">
-                <li><i class="fa-solid fa-check text-gold"></i> <strong>Unlimited Bandwidth:</strong> Your site is served globally via Cloudflare CDN.</li>
-                <li><i class="fa-solid fa-check text-gold"></i> <strong>Serverless Functions:</strong> 100,000 free API requests per day.</li>
-                <li><i class="fa-solid fa-check text-gold"></i> <strong>Instant Updates:</strong> Updating content in this panel reflects live immediately.</li>
-              </ul>
+            <div class="dashboard-card glass-panel developer-support-card">
+              <div>
+                <div class="support-brand">
+                  <div class="support-logo-badge"><i class="fa-solid fa-laptop-code"></i></div>
+                  <div>
+                    <h3 class="support-company-name">Webverse Software Solutions</h3>
+                    <span class="support-company-tag">Technical Architecture &amp; Dedicated Support</span>
+                  </div>
+                </div>
+                <p class="support-card-desc">Need assistance, custom design updates, or maintenance? Connect directly with our development team.</p>
+              </div>
+              <div class="support-contacts-minimal">
+                <a href="tel:+917326974498" class="contact-pill" title="Call Webverse Support">
+                  <i class="fa-solid fa-phone"></i>
+                  <span>+91 7326974498</span>
+                </a>
+                <a href="https://wa.me/917326974498?text=Hello%20Webverse,%20I%20need%20assistance%20with%20the%20Rakhi%20Makeovers%20Admin%20Panel" target="_blank" rel="noopener noreferrer" class="contact-pill whatsapp" title="Chat on WhatsApp">
+                  <i class="fa-brands fa-whatsapp"></i>
+                  <span>WhatsApp</span>
+                </a>
+                <a href="mailto:workabhiorg@gmail.com?subject=Rakhi%20Makeovers%20Admin%20Panel%20Support" class="contact-pill email" title="Email Webverse">
+                  <i class="fa-solid fa-envelope"></i>
+                  <span>workabhiorg@gmail.com</span>
+                </a>
+              </div>
             </div>
           </div>
         </section>
@@ -326,12 +369,12 @@
 
                 <div class="form-group">
                   <label for="new-password" class="form-label">New Password</label>
-                  <input type="password" id="new-password" class="form-input" required minlength="6" placeholder="At least 6 characters">
+                  <input type="password" id="new-password" class="form-input" required minlength="8" placeholder="At least 8 characters">
                 </div>
 
                 <div class="form-group">
                   <label for="confirm-password" class="form-label">Confirm New Password</label>
-                  <input type="password" id="confirm-password" class="form-input" required minlength="6" placeholder="Repeat new password">
+                  <input type="password" id="confirm-password" class="form-input" required minlength="8" placeholder="Repeat new password">
                 </div>
 
                 <button type="submit" class="btn btn-gold" id="btn-save-password">
@@ -358,14 +401,27 @@
                   <span class="info-val">+91 82490 77825</span>
                 </div>
                 <div class="info-item">
-                  <span class="info-label">Cloudflare Deployment</span>
-                  <span class="info-val">Free Edge Workers / Functions</span>
+                  <span class="info-label">Platform Infrastructure</span>
+                  <span class="info-val">Cloudflare Global Edge Engine</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Technical Partner</span>
+                  <span class="info-val">Webverse Software Solutions</span>
                 </div>
               </div>
             </div>
 
           </div>
         </section>
+
+      <!-- Admin Application Global Footer -->
+        <footer class="admin-app-footer">
+          <span>&copy; 2026 <strong>Rakhi Makeovers</strong>. All rights reserved.</span>
+          <span class="footer-divider">&bull;</span>
+          <span>Engineered &amp; Maintained by <a href="mailto:workabhiorg@gmail.com" class="developer-link">Webverse Software Solutions</a></span>
+          <span class="footer-divider">&bull;</span>
+          <span class="footer-support-phone"><i class="fa-solid fa-phone"></i> +91 7326974498</span>
+        </footer>
 
       </main>
     </div>
