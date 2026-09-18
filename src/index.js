@@ -60,20 +60,16 @@ export default {
       return uploadPost(context);
     }
 
-    // 2. Custom Obfuscated Admin Dashboard Route (/login/Rakhi and /admin)
+    // 2. Custom Obfuscated Admin Dashboard Route (/login/Rakhi, /login, /admin)
     const normalizedPath = pathname.replace(/\/+$/, '').toLowerCase();
     if (
       normalizedPath === '/login/rakhi' ||
+      normalizedPath === '/login' ||
       normalizedPath === '/admin' ||
       normalizedPath === '/admin.html'
     ) {
-      if (env && env.ASSETS) {
-        try {
-          const assetRes = await env.ASSETS.fetch(new Request(new URL('/login/Rakhi/index.html', request.url), request));
-          if (assetRes.status < 400) return assetRes;
-        } catch (e) {}
-      }
       return new Response(ADMIN_HTML, {
+        status: 200,
         headers: {
           'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet',
