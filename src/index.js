@@ -12,6 +12,7 @@ import { onRequest as galleryHandler } from '../functions/api/gallery/[[catchall
 import { onRequest as reviewsHandler } from '../functions/api/reviews/[[catchall]].js';
 import { onRequestPost as uploadPost } from '../functions/api/upload.js';
 import { SECURE_CORS_HEADERS } from '../functions/api/_auth.js';
+import { ADMIN_HTML, INDEX_HTML, NOT_FOUND_HTML, ADMIN_CSS, ADMIN_JS } from './embeddedAssets.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -59,11 +60,60 @@ export default {
       return uploadPost(context);
     }
 
-    // 2. Static Assets Dispatching (for Cloudflare Workers with Assets)
-    if (env.ASSETS) {
-      return env.ASSETS.fetch(request);
+    // 2. Custom Obfuscated Admin Dashboard Route (/login/Rakhi and /admin)
+    const normalizedPath = pathname.replace(/\/+$/, '').toLowerCase();
+    if (
+      normalizedPath === '/login/rakhi' ||
+      normalizedPath === '/admin' ||
+      normalizedPath === '/admin.html'
+    ) {
+      if (env && env.ASSETS) {
+        try {
+          const assetRes = await env.ASSETS.fetch(new Request(new URL('/login/Rakhi/index.html', request.url), request));
+          if (assetRes.status < 400) return assetRes;
+        } catch (e) {}
+      }
+      return new Response(ADMIN_HTML, {
+        headers: {
+          'Content-Type': 'text/html; charset=UTF-8',
+          'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet',
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'X-Content-Type-Options': 'nosniff',
+          'X-Frame-Options': 'SAMEORIGIN'
+        }
+      });
     }
 
-    return new Response('Not Found', { status: 404 });
+    // 3. Static Assets Dispatching (for Cloudflare Workers with Assets)
+    if (env && env.ASSETS) {
+      try {
+        const res = await env.ASSETS.fetch(request);
+        if (res.status < 400) return res;
+      } catch (e) {}
+    }
+
+    // 4. Fallback Static Assets for Standalone Worker Deployments
+    if (pathname === '/assets/css/admin.css') {
+      return new Response(ADMIN_CSS, {
+        headers: { 'Content-Type': 'text/css; charset=UTF-8', 'Cache-Control': 'public, max-age=604800' }
+      });
+    }
+
+    if (pathname === '/assets/js/admin.js') {
+      return new Response(ADMIN_JS, {
+        headers: { 'Content-Type': 'application/javascript; charset=UTF-8', 'Cache-Control': 'public, max-age=604800' }
+      });
+    }
+
+    if (pathname === '/' || pathname === '/index.html' || pathname === '') {
+      return new Response(INDEX_HTML, {
+        headers: { 'Content-Type': 'text/html; charset=UTF-8', 'Cache-Control': 'public, max-age=0, must-revalidate' }
+      });
+    }
+
+    return new Response(NOT_FOUND_HTML, {
+      status: 404,
+      headers: { 'Content-Type': 'text/html; charset=UTF-8' }
+    });
   }
 };

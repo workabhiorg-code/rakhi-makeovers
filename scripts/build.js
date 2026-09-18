@@ -21,10 +21,30 @@ const EXCLUDED_PATHS = [
   'Thumbs.db'
 ];
 
+// Generate embedded fallback assets for standalone Cloudflare Worker deployments
+const srcDir = path.join(rootDir, 'src');
+const adminHtmlContent = fs.readFileSync(path.join(rootDir, 'admin.html'), 'utf8');
+const indexHtmlContent = fs.readFileSync(path.join(rootDir, 'index.html'), 'utf8');
+const notFoundHtmlContent = fs.readFileSync(path.join(rootDir, '404.html'), 'utf8');
+const adminCssContent = fs.readFileSync(path.join(rootDir, 'assets', 'css', 'admin.css'), 'utf8');
+const adminJsContent = fs.readFileSync(path.join(rootDir, 'assets', 'js', 'admin.js'), 'utf8');
+
+const embeddedAssetsJs = `// Auto-generated embedded assets for Cloudflare Worker fallback
+export const ADMIN_HTML = ${JSON.stringify(adminHtmlContent)};
+export const INDEX_HTML = ${JSON.stringify(indexHtmlContent)};
+export const NOT_FOUND_HTML = ${JSON.stringify(notFoundHtmlContent)};
+export const ADMIN_CSS = ${JSON.stringify(adminCssContent)};
+export const ADMIN_JS = ${JSON.stringify(adminJsContent)};
+`;
+
+fs.writeFileSync(path.join(srcDir, 'embeddedAssets.js'), embeddedAssetsJs, 'utf8');
+console.log(' ✓ Generated src/embeddedAssets.js (Cloudflare Worker resilient fallback)');
+
 // Copy all production website files into dist/
 const itemsToCopy = [
   'index.html',
   'admin.html',
+  'login',
   'admin',
   '404.html',
   'favicon.ico',

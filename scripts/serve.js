@@ -581,7 +581,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
-  if (reqPath === '/admin') reqPath = '/admin.html';
+  
+  const normPath = reqPath.replace(/\/+$/, '').toLowerCase();
+  if (normPath === '/login/rakhi' || normPath === '/admin' || normPath === '/admin.html') {
+    reqPath = '/login/Rakhi/index.html';
+  }
 
   let filePath = path.join(ROOT, reqPath);
 
@@ -633,5 +637,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`✨ Rakhi Makeovers Preview Server running at http://localhost:${PORT}/`);
-  console.log(`🔐 Admin Panel available at http://localhost:${PORT}/admin.html`);
+  console.log(`🔐 Admin Studio Panel available at http://localhost:${PORT}/login/Rakhi`);
 });
