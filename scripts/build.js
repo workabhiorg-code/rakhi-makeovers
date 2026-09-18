@@ -36,7 +36,9 @@ const itemsToCopy = [
   '_headers',
   '_redirects',
   'assets',
-  'data'
+  'data',
+  'functions',
+  'src'
 ];
 
 function copyRecursive(src, dest) {
