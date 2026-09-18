@@ -1,6 +1,17 @@
 # Cloudflare Pages / Workers Redirects
 # Documentation: https://developers.cloudflare.com/pages/configuration/redirects/
 
+# Custom Admin Studio Panel Route: /login/Rakhi
+/login/Rakhi      /login/Rakhi/index.html    200
+/login/rakhi      /login/Rakhi/index.html    200
+/login/Rakhi/     /login/Rakhi/index.html    200
+/login/rakhi/     /login/Rakhi/index.html    200
+
+# Legacy Admin Route Redirection
+/admin            /login/Rakhi               301
+/admin/           /login/Rakhi               301
+/admin.html       /login/Rakhi               301
+
 # Standard Clean Redirection
-/index.html    /            301
+/index.html       /                          301
 

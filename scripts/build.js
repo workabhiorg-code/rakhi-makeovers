@@ -25,6 +25,7 @@ const EXCLUDED_PATHS = [
 const itemsToCopy = [
   'index.html',
   'admin.html',
+  'login',
   'admin',
   '404.html',
   'favicon.ico',

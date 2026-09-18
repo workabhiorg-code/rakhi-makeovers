@@ -59,7 +59,22 @@ export default {
       return uploadPost(context);
     }
 
-    // 2. Static Assets Dispatching (for Cloudflare Workers with Assets)
+    // 2. Custom Obfuscated Admin Dashboard Route (/login/Rakhi)
+    const normalizedPath = pathname.replace(/\/+$/, '');
+    if (normalizedPath.toLowerCase() === '/login/rakhi') {
+      if (env.ASSETS) {
+        const adminUrl = new URL('/login/Rakhi/index.html', request.url);
+        return env.ASSETS.fetch(new Request(adminUrl, request));
+      }
+    }
+
+    // 3. Legacy Admin Redirect to Custom /login/Rakhi
+    if (normalizedPath.toLowerCase() === '/admin') {
+      const redirectUrl = new URL('/login/Rakhi', request.url);
+      return Response.redirect(redirectUrl.toString(), 301);
+    }
+
+    // 4. Static Assets Dispatching (for Cloudflare Workers with Assets)
     if (env.ASSETS) {
       return env.ASSETS.fetch(request);
     }
