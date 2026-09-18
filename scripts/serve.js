@@ -96,9 +96,10 @@ function validateImageMagicBytes(buffer) {
   return { valid: false, format: null, mime: null };
 }
 
-// Helper: Hash password
+// Helper: Hash password (matches Web Crypto / Cloudflare SubtleCrypto PBKDF2)
 function hashPassword(password, salt) {
-  return crypto.pbkdf2Sync(password, salt, 100000, 64, 'sha512').toString('hex');
+  const saltBuf = (typeof salt === 'string' && /^[0-9a-fA-F]{32,}$/.test(salt)) ? Buffer.from(salt, 'hex') : Buffer.from(String(salt));
+  return crypto.pbkdf2Sync(password, saltBuf, 100000, 64, 'sha512').toString('hex');
 }
 
 // Helper: Read JSON Data File
@@ -204,12 +205,13 @@ const server = http.createServer(async (req, res) => {
         const adminData = readData('admin.json', {
           username: 'admin',
           salt: '8f92a3c7b4e1d6502938475610293847',
-          passwordHash: '413d666ed8cbf6c869e1d5c53024f9eb0bc6e11e1a234bd62a728fb4027fec275964400b4b53fad802f63e08c633fd87f2718fe7f629b0243d062439d463e778',
+          passwordHash: 'e438ebcbf5e87d0579ebed59bc5c6347745d7405409a9eb9dc1ad4b39d2edf6c08664d37fb19afb5f31047641f562bc5f3cab160a67f9ba2ecfb47f8f85054b3',
           sessions: []
         });
 
-        const computedHash = hashPassword(password || '', adminData.salt);
-        if (username === adminData.username && computedHash === adminData.passwordHash) {
+        const computedHash = hashPassword((password || '').trim(), adminData.salt);
+        const usernameMatch = (username || '').trim().toLowerCase() === adminData.username.toLowerCase();
+        if (usernameMatch && computedHash === adminData.passwordHash) {
           resetLoginAttempts(clientIp);
 
           const token = crypto.randomBytes(32).toString('hex');
