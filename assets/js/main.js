@@ -459,30 +459,22 @@ function initServicesCarousel() {
 
     // Touch Swipe gestures for Mobile
     let startX = 0;
-    let startY = 0;
     let isSwiping = false;
 
     wrapper.addEventListener('touchstart', (e) => {
-      if (e.touches && e.touches[0]) {
-        servicesCarouselState.isPaused = true;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        isSwiping = true;
-      }
+      servicesCarouselState.isPaused = true;
+      startX = e.touches[0].clientX;
+      isSwiping = true;
     }, { passive: true });
 
     wrapper.addEventListener('touchend', (e) => {
-      if (!isSwiping || !e.changedTouches || !e.changedTouches[0]) return;
+      if (!isSwiping) return;
       isSwiping = false;
       servicesCarouselState.isPaused = false;
       const endX = e.changedTouches[0].clientX;
-      const endY = e.changedTouches[0].clientY;
-      const diffX = startX - endX;
-      const diffY = startY - endY;
-
-      // Trigger slide only if horizontal swipe dominates vertical page scroll
-      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
-        if (diffX > 0) {
+      const diff = startX - endX;
+      if (Math.abs(diff) > 40) {
+        if (diff > 0) {
           nextSlide();
         } else {
           prevSlide();
@@ -1022,30 +1014,22 @@ function initTestimonialCarousel() {
 
   // Touch Swipe gestures for Mobile
   let startX = 0;
-  let startY = 0;
   let isSwiping = false;
 
   wrapper.addEventListener('touchstart', (e) => {
-    if (e.touches && e.touches[0]) {
-      isPaused = true;
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-      isSwiping = true;
-    }
+    isPaused = true;
+    startX = e.touches[0].clientX;
+    isSwiping = true;
   }, { passive: true });
 
   wrapper.addEventListener('touchend', (e) => {
-    if (!isSwiping || !e.changedTouches || !e.changedTouches[0]) return;
+    if (!isSwiping) return;
     isSwiping = false;
     isPaused = false;
     const endX = e.changedTouches[0].clientX;
-    const endY = e.changedTouches[0].clientY;
-    const diffX = startX - endX;
-    const diffY = startY - endY;
-
-    // Trigger slide only if horizontal swipe dominates vertical page scroll
-    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
-      if (diffX > 0) {
+    const diff = startX - endX;
+    if (Math.abs(diff) > 40) {
+      if (diff > 0) {
         nextSlide();
       } else {
         prevSlide();

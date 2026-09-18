@@ -10,9 +10,6 @@ Allow: /assets/
 Allow: /assets/images/
 Allow: /assets/css/
 Allow: /assets/js/
-Disallow: /login/
-Disallow: /admin
-Disallow: /admin/
 Disallow: /scripts/
 Disallow: /node_modules/
 
@@ -24,18 +21,12 @@ Allow: /
 # 3. Bingbot (Microsoft Bing Webmaster Indexer)
 User-agent: Bingbot
 Allow: /
-Disallow: /login/
-Disallow: /admin
-Disallow: /admin/
 Disallow: /scripts/
 Disallow: /node_modules/
 
 # 4. All Other Verified Search Crawlers
 User-agent: *
 Allow: /
-Disallow: /login/
-Disallow: /admin
-Disallow: /admin/
 Disallow: /scripts/
 Disallow: /node_modules/
 
