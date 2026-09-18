@@ -44,8 +44,6 @@ console.log(' ✓ Generated src/embeddedAssets.js (Cloudflare Worker resilient f
 const itemsToCopy = [
   'index.html',
   'admin.html',
-  'login',
-  'admin',
   '404.html',
   'favicon.ico',
   'favicon.svg',

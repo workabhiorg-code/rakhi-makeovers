@@ -60,20 +60,23 @@ export default {
       return uploadPost(context);
     }
 
-    // 2. Custom Obfuscated Admin Dashboard Route (/login/Rakhi, /login, /admin)
+    // 2. Custom Admin Dashboard Routes (/admin, /login/Rakhi, /login)
     const normalizedPath = pathname.replace(/\/+$/, '').toLowerCase();
     if (
-      normalizedPath === '/login/rakhi' ||
-      normalizedPath === '/login' ||
       normalizedPath === '/admin' ||
-      normalizedPath === '/admin.html'
+      normalizedPath === '/admin.html' ||
+      normalizedPath === '/login' ||
+      normalizedPath === '/login.html' ||
+      normalizedPath === '/login/rakhi'
     ) {
       return new Response(ADMIN_HTML, {
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=UTF-8',
           'X-Robots-Tag': 'noindex, nofollow, noarchive, nosnippet',
-          'Cache-Control': 'no-store, no-cache, must-revalidate',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          'Pragma': 'no-cache',
+          'Expires': '0',
           'X-Content-Type-Options': 'nosniff',
           'X-Frame-Options': 'SAMEORIGIN'
         }

@@ -583,8 +583,14 @@ const server = http.createServer(async (req, res) => {
   if (reqPath === '/' || reqPath === '') reqPath = '/index.html';
   
   const normPath = reqPath.replace(/\/+$/, '').toLowerCase();
-  if (normPath === '/login/rakhi' || normPath === '/admin' || normPath === '/admin.html') {
-    reqPath = '/login/Rakhi/index.html';
+  if (
+    normPath === '/login/rakhi' ||
+    normPath === '/admin' ||
+    normPath === '/admin.html' ||
+    normPath === '/login' ||
+    normPath === '/login.html'
+  ) {
+    reqPath = '/admin.html';
   }
 
   let filePath = path.join(ROOT, reqPath);
