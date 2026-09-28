@@ -90,7 +90,8 @@ foreach ($m in $imgMatches) {
     $tag = $m.Groups[1].Value
     if ($tag -match 'src=["'']([^"'']+)["'']') {
         $src = $Matches[1]
-        $srcFile = Join-Path $root ($src -replace '/', '\')
+        $cleanSrc = ($src -split '\?')[0]
+        $srcFile = Join-Path $root ($cleanSrc -replace '/', '\')
         if (-not (Test-Path $srcFile)) {
             $missingImages++
         }

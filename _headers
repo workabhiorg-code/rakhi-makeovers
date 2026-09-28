@@ -32,9 +32,9 @@
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store, no-cache, must-revalidate
 
-# Static Assets (Images, WebP, PNG, SVG, Favicons, Fonts) - 1 Year Cache
+# Static Assets (Images, WebP, PNG, SVG, Favicons, Fonts)
 /assets/images/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=604800, stale-while-revalidate=86400
   Access-Control-Allow-Origin: *
 
 /favicon.*
