@@ -1545,3 +1545,81 @@ body.admin-body {
 .login-developer-credit strong {
   color: var(--color-gold-light);
 }
+
+/* ==========================================================================
+   MEDIA STORAGE & ZERO-BLOAT MANAGER
+   ========================================================================== */
+.settings-card-desc {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  margin-top: -0.5rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.storage-stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.85rem;
+  margin-bottom: 1.25rem;
+}
+
+.storage-stat-pill {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.storage-pill-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-dim);
+}
+
+.storage-pill-val {
+  font-size: 1.15rem;
+  color: var(--color-gold-light);
+  font-weight: 700;
+  font-family: var(--font-sans);
+}
+
+.storage-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+}
+
+.form-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.form-label-row .form-label {
+  margin-bottom: 0;
+}
+
+.auto-clean-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+

@@ -167,6 +167,151 @@ function parseBody(req) {
   });
 }
 
+// =========================================================================
+// SMART MEDIA CLEANUP & ZERO-BLOAT ENGINE
+// =========================================================================
+
+// Helper: Check if an image path is a user upload
+function isUploadPath(imagePath) {
+  if (!imagePath || typeof imagePath !== 'string') return false;
+  const clean = imagePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  return clean.startsWith('assets/images/uploads/') || clean.startsWith('uploads/');
+}
+
+// Helper: Check if an upload image is currently referenced in any active data file
+function isImageReferenced(imagePath, excludeRecord = null) {
+  if (!imagePath || typeof imagePath !== 'string') return false;
+  const normTarget = imagePath.replace(/\\/g, '/').replace(/^\/+/, '');
+  const basenameTarget = path.basename(normTarget);
+  if (!basenameTarget || basenameTarget === '.gitkeep') return true;
+
+  const services = readData('services.json', []);
+  const gallery = readData('gallery.json', []);
+  const reviews = readData('reviews.json', []);
+
+  for (const s of services) {
+    if (excludeRecord && excludeRecord.type === 'service' && s.id === excludeRecord.id) continue;
+    if (s.image) {
+      const norm = s.image.replace(/\\/g, '/').replace(/^\/+/, '');
+      if (norm === normTarget || path.basename(norm) === basenameTarget) return true;
+    }
+  }
+
+  for (const g of gallery) {
+    if (excludeRecord && excludeRecord.type === 'gallery' && g.id === excludeRecord.id) continue;
+    if (g.image) {
+      const norm = g.image.replace(/\\/g, '/').replace(/^\/+/, '');
+      if (norm === normTarget || path.basename(norm) === basenameTarget) return true;
+    }
+  }
+
+  for (const r of reviews) {
+    if (excludeRecord && excludeRecord.type === 'review' && r.id === excludeRecord.id) continue;
+    if (r.avatarImage) {
+      const norm = r.avatarImage.replace(/\\/g, '/').replace(/^\/+/, '');
+      if (norm === normTarget || path.basename(norm) === basenameTarget) return true;
+    }
+  }
+
+  return false;
+}
+
+// Helper: Safely delete an uploaded file if not referenced anywhere else
+function deleteUploadedFileIfUnused(imagePath, excludeRecord = null) {
+  if (!isUploadPath(imagePath)) return false;
+  if (isImageReferenced(imagePath, excludeRecord)) return false;
+
+  const filename = path.basename(imagePath);
+  if (!filename || filename === '.gitkeep') return false;
+
+  const filePath = path.join(UPLOADS_DIR, filename);
+  try {
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+      console.log(`🗑️ [Auto-Clean] Successfully deleted old/unreferenced photo: ${filename}`);
+      return true;
+    }
+  } catch (err) {
+    console.error(`⚠️ [Auto-Clean Error] Failed to delete file ${filename}:`, err);
+  }
+  return false;
+}
+
+// Helper: Format bytes to readable string
+function formatBytes(bytes) {
+  if (bytes === 0) return '0 KB';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+// Helper: Get media storage statistics & orphan analysis
+function getMediaStorageStats() {
+  if (!fs.existsSync(UPLOADS_DIR)) {
+    return { totalFiles: 0, totalSizeBytes: 0, totalSizeFormatted: '0 KB', activeFiles: 0, orphanCount: 0, orphanSizeBytes: 0, orphanSizeFormatted: '0 KB', orphanList: [] };
+  }
+
+  const files = fs.readdirSync(UPLOADS_DIR).filter(f => f !== '.gitkeep');
+  let totalSizeBytes = 0;
+  const allUploads = [];
+
+  for (const file of files) {
+    const fullPath = path.join(UPLOADS_DIR, file);
+    try {
+      const stats = fs.statSync(fullPath);
+      totalSizeBytes += stats.size;
+      allUploads.push({
+        filename: file,
+        path: `assets/images/uploads/${file}`,
+        sizeBytes: stats.size,
+        mtime: stats.mtime
+      });
+    } catch (e) {}
+  }
+
+  const orphanFiles = allUploads.filter(u => !isImageReferenced(u.path));
+  const orphanSizeBytes = orphanFiles.reduce((acc, u) => acc + u.sizeBytes, 0);
+
+  return {
+    totalFiles: files.length,
+    totalSizeBytes,
+    totalSizeFormatted: formatBytes(totalSizeBytes),
+    activeFiles: files.length - orphanFiles.length,
+    orphanCount: orphanFiles.length,
+    orphanSizeBytes,
+    orphanSizeFormatted: formatBytes(orphanSizeBytes),
+    orphanList: orphanFiles.map(o => o.filename)
+  };
+}
+
+// Helper: Purge all orphan uploads
+function purgeOrphanUploads() {
+  const stats = getMediaStorageStats();
+  let deletedCount = 0;
+  let freedBytes = 0;
+
+  for (const orphan of stats.orphanList) {
+    const filePath = path.join(UPLOADS_DIR, orphan);
+    try {
+      if (fs.existsSync(filePath)) {
+        const fileStat = fs.statSync(filePath);
+        fs.unlinkSync(filePath);
+        deletedCount++;
+        freedBytes += fileStat.size;
+        console.log(`🧹 [Orphan Purged] Cleaned orphan file: ${orphan}`);
+      }
+    } catch (e) {
+      console.error(`⚠️ [Purge Error] Failed to delete ${orphan}:`, e);
+    }
+  }
+
+  return {
+    success: true,
+    deletedCount,
+    freedBytes,
+    freedFormatted: formatBytes(freedBytes)
+  };
+}
+
 // Main HTTP Server
 const server = http.createServer(async (req, res) => {
   const clientIp = req.socket.remoteAddress || '127.0.0.1';
@@ -297,7 +442,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // 2. Services CRUD API
+    // 2. Services CRUD API (with Smart Auto-Photo Cleanup on Replace & Delete)
     if (pathname === '/api/services' || pathname.startsWith('/api/services/')) {
       const idMatch = pathname.match(/^\/api\/services\/([a-zA-Z0-9_-]+)$/);
       const serviceId = idMatch ? idMatch[1] : null;
@@ -343,6 +488,13 @@ const server = http.createServer(async (req, res) => {
             sendJSON(res, 404, { success: false, message: 'Service not found' });
             return;
           }
+
+          // 🗑️ Smart Auto-Clean: If photo is being replaced with a new one, delete old photo
+          const oldImage = services[index].image;
+          if (updateData.image && updateData.image !== oldImage) {
+            deleteUploadedFileIfUnused(oldImage, { type: 'service', id: serviceId });
+          }
+
           services[index] = { ...services[index], ...updateData, id: serviceId };
           writeData('services.json', services);
           sendJSON(res, 200, { success: true, service: services[index] });
@@ -353,6 +505,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (req.method === 'DELETE' && serviceId) {
+        const targetService = services.find(s => s.id === serviceId);
+        if (targetService && targetService.image) {
+          // 🗑️ Delete associated uploaded image if not shared elsewhere
+          deleteUploadedFileIfUnused(targetService.image, { type: 'service', id: serviceId });
+        }
+
         const filtered = services.filter(s => s.id !== serviceId);
         writeData('services.json', filtered);
         sendJSON(res, 200, { success: true, message: 'Service deleted successfully' });
@@ -360,7 +518,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // 3. Gallery / Lookbook CRUD API
+    // 3. Gallery / Lookbook CRUD API (with Smart Auto-Photo Cleanup on Replace & Delete)
     if (pathname === '/api/gallery' || pathname.startsWith('/api/gallery/')) {
       const idMatch = pathname.match(/^\/api\/gallery\/([a-zA-Z0-9_-]+)$/);
       const galleryId = idMatch ? idMatch[1] : null;
@@ -406,6 +564,13 @@ const server = http.createServer(async (req, res) => {
             sendJSON(res, 404, { success: false, message: 'Gallery item not found' });
             return;
           }
+
+          // 🗑️ Smart Auto-Clean: If photo is being replaced with a new one, delete old photo
+          const oldImage = gallery[index].image;
+          if (updateData.image && updateData.image !== oldImage) {
+            deleteUploadedFileIfUnused(oldImage, { type: 'gallery', id: galleryId });
+          }
+
           gallery[index] = { ...gallery[index], ...updateData, id: galleryId };
           writeData('gallery.json', gallery);
           sendJSON(res, 200, { success: true, item: gallery[index] });
@@ -416,6 +581,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (req.method === 'DELETE' && galleryId) {
+        const targetItem = gallery.find(g => g.id === galleryId);
+        if (targetItem && targetItem.image) {
+          // 🗑️ Delete associated uploaded image if not shared elsewhere
+          deleteUploadedFileIfUnused(targetItem.image, { type: 'gallery', id: galleryId });
+        }
+
         const filtered = gallery.filter(g => g.id !== galleryId);
         writeData('gallery.json', filtered);
         sendJSON(res, 200, { success: true, message: 'Gallery item deleted successfully' });
@@ -423,7 +594,7 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // 4. Reviews CRUD API
+    // 4. Reviews CRUD API (with Smart Auto-Avatar Cleanup on Replace & Delete)
     if (pathname === '/api/reviews' || pathname.startsWith('/api/reviews/')) {
       const idMatch = pathname.match(/^\/api\/reviews\/([a-zA-Z0-9_-]+)$/);
       const reviewId = idMatch ? idMatch[1] : null;
@@ -469,6 +640,13 @@ const server = http.createServer(async (req, res) => {
             sendJSON(res, 404, { success: false, message: 'Review not found' });
             return;
           }
+
+          // 🗑️ Smart Auto-Clean: If avatar is being replaced with a new one, delete old avatar
+          const oldAvatar = reviews[index].avatarImage;
+          if (updateData.avatarImage && updateData.avatarImage !== oldAvatar) {
+            deleteUploadedFileIfUnused(oldAvatar, { type: 'review', id: reviewId });
+          }
+
           reviews[index] = { ...reviews[index], ...updateData, id: reviewId };
           writeData('reviews.json', reviews);
           sendJSON(res, 200, { success: true, review: reviews[index] });
@@ -479,6 +657,12 @@ const server = http.createServer(async (req, res) => {
       }
 
       if (req.method === 'DELETE' && reviewId) {
+        const targetReview = reviews.find(r => r.id === reviewId);
+        if (targetReview && targetReview.avatarImage) {
+          // 🗑️ Delete associated uploaded avatar if not shared elsewhere
+          deleteUploadedFileIfUnused(targetReview.avatarImage, { type: 'review', id: reviewId });
+        }
+
         const filtered = reviews.filter(r => r.id !== reviewId);
         writeData('reviews.json', filtered);
         sendJSON(res, 200, { success: true, message: 'Review deleted successfully' });
@@ -486,7 +670,29 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
-    // 5. Image Upload API (with Magic Byte verification and size caps)
+    // 5. Media & Storage Health Management API
+    if (pathname === '/api/media/stats' && req.method === 'GET') {
+      if (!verifyAuth(req)) {
+        sendJSON(res, 401, { success: false, message: 'Unauthorized' });
+        return;
+      }
+      const stats = getMediaStorageStats();
+      sendJSON(res, 200, { success: true, stats });
+      return;
+    }
+
+    if (pathname === '/api/media/cleanup' && req.method === 'POST') {
+      if (!verifyAuth(req)) {
+        sendJSON(res, 401, { success: false, message: 'Unauthorized' });
+        return;
+      }
+      const result = purgeOrphanUploads();
+      const updatedStats = getMediaStorageStats();
+      sendJSON(res, 200, { success: true, ...result, stats: updatedStats });
+      return;
+    }
+
+    // 6. Image Upload API (with Magic Byte verification and size caps)
     if (pathname === '/api/upload' && req.method === 'POST') {
       if (!verifyAuth(req)) {
         sendJSON(res, 401, { success: false, message: 'Unauthorized' });

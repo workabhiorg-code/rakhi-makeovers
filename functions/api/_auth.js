@@ -184,3 +184,17 @@ export function validateImageMagicBytes(uint8Array) {
 
   return { valid: false, format: null };
 }
+
+/**
+ * Safely delete an uploaded file from Cloudflare R2 bucket
+ */
+export async function deleteR2ImageIfUnused(env, imagePath) {
+  if (!env || !env.RAKHI_BUCKET || !imagePath || typeof imagePath !== 'string') return;
+  const cleanKey = imagePath.replace(/^https?:\/\/[^\/]+\//, '').replace(/^\/+/, '');
+  if (cleanKey.startsWith('uploads/')) {
+    try {
+      await env.RAKHI_BUCKET.delete(cleanKey);
+    } catch (e) {}
+  }
+}
+

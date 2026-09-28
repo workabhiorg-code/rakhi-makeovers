@@ -1,5 +1,5 @@
 // Cloudflare Pages Function: /api/reviews and /api/reviews/:id
-import { SECURE_CORS_HEADERS, verifyAuth } from '../_auth.js';
+import { SECURE_CORS_HEADERS, verifyAuth, deleteR2ImageIfUnused } from '../_auth.js';
 
 const DEFAULT_REVIEWS = [
   {
@@ -168,6 +168,13 @@ export async function onRequest(context) {
           status: 404
         });
       }
+
+      // 🗑️ Delete old avatar from R2 if replaced
+      const oldAvatar = reviews[index].avatarImage;
+      if (updateData.avatarImage && updateData.avatarImage !== oldAvatar) {
+        await deleteR2ImageIfUnused(env, oldAvatar);
+      }
+
       reviews[index] = { ...reviews[index], ...updateData, id: reviewId };
       await saveReviews(env, reviews);
       return new Response(JSON.stringify({ success: true, review: reviews[index] }), {
@@ -183,6 +190,10 @@ export async function onRequest(context) {
   }
 
   if (method === 'DELETE' && reviewId) {
+    const target = reviews.find(r => r.id === reviewId);
+    if (target && target.avatarImage) {
+      await deleteR2ImageIfUnused(env, target.avatarImage);
+    }
     reviews = reviews.filter(r => r.id !== reviewId);
     await saveReviews(env, reviews);
     return new Response(JSON.stringify({ success: true, message: 'Review deleted' }), {

@@ -217,6 +217,14 @@
             </div>
 
             <div class="stat-card glass-panel">
+              <div class="stat-icon purple"><i class="fa-solid fa-hard-drive"></i></div>
+              <div class="stat-data">
+                <span class="stat-number" id="stat-storage-size">1.5 MB</span>
+                <span class="stat-label">Zero-Bloat Media</span>
+              </div>
+            </div>
+
+            <div class="stat-card glass-panel">
               <div class="stat-icon emerald"><i class="fa-solid fa-shield-halved"></i></div>
               <div class="stat-data">
                 <span class="stat-number">Active</span>
@@ -384,6 +392,36 @@
               </form>
             </div>
 
+            <!-- Media Storage & Zero-Bloat Manager Card -->
+            <div class="settings-card glass-panel" id="media-storage-card">
+              <h3 class="card-heading"><i class="fa-solid fa-hard-drive text-gold"></i> Media Storage &amp; Clean Engine</h3>
+              <p class="settings-card-desc">Automatic zero-bloat cleanup is active. Old photos are deleted automatically whenever replaced or removed.</p>
+              
+              <div class="storage-stats-container">
+                <div class="storage-stat-pill">
+                  <span class="storage-pill-label">Total Uploads</span>
+                  <strong id="storage-total-files" class="storage-pill-val">6 files</strong>
+                </div>
+                <div class="storage-stat-pill">
+                  <span class="storage-pill-label">Storage Used</span>
+                  <strong id="storage-total-size" class="storage-pill-val">1.55 MB</strong>
+                </div>
+                <div class="storage-stat-pill">
+                  <span class="storage-pill-label">Unreferenced / Orphans</span>
+                  <strong id="storage-orphan-count" class="storage-pill-val">0 files</strong>
+                </div>
+              </div>
+
+              <div class="storage-actions-row">
+                <button type="button" class="btn btn-outline-gold btn-sm" id="btn-refresh-storage" onclick="fetchStorageStats(true)">
+                  <i class="fa-solid fa-arrows-rotate"></i> Refresh Stats
+                </button>
+                <button type="button" class="btn btn-gold btn-sm" id="btn-purge-orphans" onclick="purgeOrphanMedia()">
+                  <i class="fa-solid fa-broom"></i> Purge Unused Photos
+                </button>
+              </div>
+            </div>
+
             <!-- Studio Info Card -->
             <div class="settings-card glass-panel">
               <h3 class="card-heading"><i class="fa-solid fa-sliders text-gold"></i> Studio Overview</h3>
@@ -470,7 +508,10 @@
 
         <!-- Image Upload Dropzone -->
         <div class="form-group">
-          <label class="form-label">Upload New Thumbnail Photo</label>
+          <div class="form-label-row">
+            <label class="form-label">Upload New Thumbnail Photo</label>
+            <span class="auto-clean-pill"><i class="fa-solid fa-recycle"></i> Auto-Clean: Replaces &amp; deletes old file</span>
+          </div>
           <div class="dropzone" id="service-dropzone">
             <input type="file" id="service-file-input" accept="image/*" style="display: none;">
             <div class="dropzone-content" onclick="document.getElementById('service-file-input').click()">
@@ -546,7 +587,10 @@
 
         <!-- Image Upload Dropzone -->
         <div class="form-group">
-          <label class="form-label">Upload High-Res Photo *</label>
+          <div class="form-label-row">
+            <label class="form-label">Upload High-Res Photo *</label>
+            <span class="auto-clean-pill"><i class="fa-solid fa-recycle"></i> Auto-Clean: Replaces &amp; deletes old file</span>
+          </div>
           <div class="dropzone" id="gallery-dropzone">
             <input type="file" id="gallery-file-input" accept="image/*" style="display: none;">
             <div class="dropzone-content" onclick="document.getElementById('gallery-file-input').click()">

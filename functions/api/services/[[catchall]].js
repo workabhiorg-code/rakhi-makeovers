@@ -1,5 +1,5 @@
 // Cloudflare Pages Function: /api/services and /api/services/:id
-import { SECURE_CORS_HEADERS, verifyAuth } from '../_auth.js';
+import { SECURE_CORS_HEADERS, verifyAuth, deleteR2ImageIfUnused } from '../_auth.js';
 
 const DEFAULT_SERVICES = [
   {
@@ -175,6 +175,13 @@ export async function onRequest(context) {
           status: 404
         });
       }
+
+      // 🗑️ Delete old image from R2 if replaced
+      const oldImage = services[index].image;
+      if (updateData.image && updateData.image !== oldImage) {
+        await deleteR2ImageIfUnused(env, oldImage);
+      }
+
       services[index] = { ...services[index], ...updateData, id: serviceId };
       await saveServices(env, services);
       return new Response(JSON.stringify({ success: true, service: services[index] }), {
@@ -190,6 +197,10 @@ export async function onRequest(context) {
   }
 
   if (method === 'DELETE' && serviceId) {
+    const target = services.find(s => s.id === serviceId);
+    if (target && target.image) {
+      await deleteR2ImageIfUnused(env, target.image);
+    }
     services = services.filter(s => s.id !== serviceId);
     await saveServices(env, services);
     return new Response(JSON.stringify({ success: true, message: 'Service deleted' }), {

@@ -1,5 +1,5 @@
 // Cloudflare Pages Function: /api/gallery and /api/gallery/:id
-import { SECURE_CORS_HEADERS, verifyAuth } from '../_auth.js';
+import { SECURE_CORS_HEADERS, verifyAuth, deleteR2ImageIfUnused } from '../_auth.js';
 
 const DEFAULT_GALLERY = [
   {
@@ -151,6 +151,13 @@ export async function onRequest(context) {
           status: 404
         });
       }
+
+      // 🗑️ Delete old image from R2 if replaced
+      const oldImage = gallery[index].image;
+      if (updateData.image && updateData.image !== oldImage) {
+        await deleteR2ImageIfUnused(env, oldImage);
+      }
+
       gallery[index] = { ...gallery[index], ...updateData, id: galleryId };
       await saveGallery(env, gallery);
       return new Response(JSON.stringify({ success: true, item: gallery[index] }), {
@@ -166,6 +173,10 @@ export async function onRequest(context) {
   }
 
   if (method === 'DELETE' && galleryId) {
+    const target = gallery.find(g => g.id === galleryId);
+    if (target && target.image) {
+      await deleteR2ImageIfUnused(env, target.image);
+    }
     gallery = gallery.filter(g => g.id !== galleryId);
     await saveGallery(env, gallery);
     return new Response(JSON.stringify({ success: true, message: 'Item deleted' }), {

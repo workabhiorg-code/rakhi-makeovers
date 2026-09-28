@@ -11,6 +11,8 @@ import { onRequest as servicesHandler } from '../functions/api/services/[[catcha
 import { onRequest as galleryHandler } from '../functions/api/gallery/[[catchall]].js';
 import { onRequest as reviewsHandler } from '../functions/api/reviews/[[catchall]].js';
 import { onRequestPost as uploadPost } from '../functions/api/upload.js';
+import { onRequestGet as mediaStatsGet } from '../functions/api/media/stats.js';
+import { onRequestPost as mediaCleanupPost } from '../functions/api/media/cleanup.js';
 import { SECURE_CORS_HEADERS } from '../functions/api/_auth.js';
 import { ADMIN_HTML, INDEX_HTML, NOT_FOUND_HTML, ADMIN_CSS, ADMIN_JS } from './embeddedAssets.js';
 
@@ -54,6 +56,14 @@ export default {
 
     if (pathname.startsWith('/api/reviews')) {
       return reviewsHandler(context);
+    }
+
+    if (pathname === '/api/media/stats' && method === 'GET') {
+      return mediaStatsGet(context);
+    }
+
+    if (pathname === '/api/media/cleanup' && method === 'POST') {
+      return mediaCleanupPost(context);
     }
 
     if (pathname === '/api/upload' && method === 'POST') {

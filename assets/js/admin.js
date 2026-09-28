@@ -176,7 +176,8 @@ async function loadAllData() {
   await Promise.all([
     fetchServices(),
     fetchGallery(),
-    fetchReviews()
+    fetchReviews(),
+    fetchStorageStats()
   ]);
   updateDashboardStats();
 }
@@ -189,6 +190,86 @@ function updateDashboardStats() {
   if (statServices) statServices.textContent = servicesData.length;
   if (statGallery) statGallery.textContent = galleryData.length;
   if (statReviews) statReviews.textContent = reviewsData.length;
+}
+
+/* ==========================================================================
+   3.1 MEDIA STORAGE & ZERO-BLOAT MANAGER
+   ========================================================================== */
+let mediaStorageData = null;
+
+async function fetchStorageStats(showToastAlert = false) {
+  try {
+    const res = await fetch(`${API_BASE}/media/stats`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.success && data.stats) {
+        mediaStorageData = data.stats;
+        renderStorageStats();
+        if (showToastAlert) showToast('Storage stats refreshed!', 'success');
+      }
+    }
+  } catch (e) {}
+}
+
+function renderStorageStats() {
+  if (!mediaStorageData) return;
+  const totalFilesElem = document.getElementById('storage-total-files');
+  const totalSizeElem = document.getElementById('storage-total-size');
+  const orphanCountElem = document.getElementById('storage-orphan-count');
+  const dashStorageElem = document.getElementById('stat-storage-size');
+
+  if (totalFilesElem) totalFilesElem.textContent = `${mediaStorageData.totalFiles} files`;
+  if (totalSizeElem) totalSizeElem.textContent = mediaStorageData.totalSizeFormatted || '0 KB';
+  if (orphanCountElem) {
+    if (mediaStorageData.orphanCount > 0) {
+      orphanCountElem.innerHTML = `<span style="color: #f87171;">${mediaStorageData.orphanCount} unreferenced (${mediaStorageData.orphanSizeFormatted || '0 KB'})</span>`;
+    } else {
+      orphanCountElem.innerHTML = `<span style="color: #34d399;">0 (100% Clean)</span>`;
+    }
+  }
+  if (dashStorageElem) {
+    dashStorageElem.textContent = mediaStorageData.totalSizeFormatted || '0 KB';
+  }
+}
+
+async function purgeOrphanMedia() {
+  const purgeBtn = document.getElementById('btn-purge-orphans');
+  if (purgeBtn) {
+    purgeBtn.disabled = true;
+    purgeBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Cleaning...';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/media/cleanup`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    if (res.ok && data.success) {
+      if (data.deletedCount > 0) {
+        showToast(`Cleaned ${data.deletedCount} unused photos and recovered ${data.freedFormatted || '0 MB'}!`, 'success');
+      } else {
+        showToast('All uploaded photos are active. Zero orphan files found!', 'success');
+      }
+      if (data.stats) {
+        mediaStorageData = data.stats;
+        renderStorageStats();
+      } else {
+        fetchStorageStats();
+      }
+    } else {
+      showToast(data.message || 'Cleanup operation failed', 'error');
+    }
+  } catch (err) {
+    showToast('Error executing media cleanup', 'error');
+  } finally {
+    if (purgeBtn) {
+      purgeBtn.disabled = false;
+      purgeBtn.innerHTML = '<i class="fa-solid fa-broom"></i> Purge Unused Photos';
+    }
+  }
 }
 
 /* ==========================================================================
@@ -520,6 +601,7 @@ function initFormListeners() {
           closeModal('modal-service');
           await fetchServices();
           updateDashboardStats();
+          fetchStorageStats();
         } else {
           showToast(data.message || 'Failed to save service', 'error');
         }
@@ -575,6 +657,7 @@ function initFormListeners() {
           closeModal('modal-gallery');
           await fetchGallery();
           updateDashboardStats();
+          fetchStorageStats();
         } else {
           showToast(data.message || 'Failed to save photo', 'error');
         }
@@ -730,6 +813,7 @@ function initFormListeners() {
           if (type === 'gallery') await fetchGallery();
           if (type === 'review') await fetchReviews();
           updateDashboardStats();
+          fetchStorageStats();
         } else {
           showToast(data.message || 'Delete failed', 'error');
         }
@@ -809,9 +893,14 @@ async function handleFileUpload(file, onUploaded) {
     return;
   }
 
-  showToast('Uploading image...', 'success');
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Image exceeds maximum 5 MB limit. Please choose a smaller photo.', 'error');
+    return;
+  }
 
-  // Convert to Base64 data URL
+  showToast('Uploading & optimizing photo...', 'success');
+
+  // Convert to Base64 data URL for upload payload
   const reader = new FileReader();
   reader.onload = async () => {
     const base64Data = reader.result;
@@ -828,16 +917,14 @@ async function handleFileUpload(file, onUploaded) {
 
       const data = await res.json();
       if (res.ok && data.success && data.url) {
-        showToast('Image uploaded successfully!', 'success');
+        showToast('Photo uploaded successfully!', 'success');
         onUploaded(data.url);
+        fetchStorageStats();
       } else {
-        // Fallback to direct base64 data URI if server is in client-only mode
-        onUploaded(base64Data);
-        showToast('Image processed for preview!', 'success');
+        showToast(data.message || 'Server image upload failed.', 'error');
       }
     } catch (err) {
-      onUploaded(base64Data);
-      showToast('Image saved as preview data.', 'success');
+      showToast('Error uploading photo to server.', 'error');
     }
   };
   reader.readAsDataURL(file);
