@@ -1,6 +1,6 @@
 # ==============================================================================
 # Robots.txt for Rakhi Makeovers | Luxury Bridal Makeup Studio
-# Domain: https://rakhimakeovers.pages.dev/
+# Domain: https://rakhimakeover.com/
 # ==============================================================================
 
 # 1. Googlebot (Main Web Indexer)
@@ -46,4 +46,4 @@ Disallow: /scripts/
 Disallow: /node_modules/
 
 # Canonical Sitemap Declaration for Fast Discovery & Crawling
-Sitemap: https://rakhimakeovers.pages.dev/sitemap.xml
+Sitemap: https://rakhimakeover.com/sitemap.xml
